@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .row { display: flex; flex-direction: column; gap: 36px; max-width: 1500px; margin-top: 32px; }
+  .bubble {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 18px; padding: 26px 32px;
+    font-size: 30px; line-height: 1.5; color: var(--text);
+    max-width: 1100px;
+  }
+  .bubble.user {
+    background: rgba(250, 200, 90, 0.10);
+    border-color: var(--accent);
+    align-self: flex-start;
+  }
+  .bubble.label {
+    font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px; font-weight: 700;
+    background: none; border: none; padding: 0;
+  }
+  .bubble .who {
+    font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 10px;
+  }
+</style>
+</head>
+<body class="canvas h">
+  <div class="eyebrow">Step one</div>
+  <h1>Tell Claude what you want.</h1>
+  <div class="row">
+    <div class="bubble user">
+      <div class="who">You</div>
+      Make a 30-second video explaining what an SSD does.
+    </div>
+  </div>
+</body></html>
