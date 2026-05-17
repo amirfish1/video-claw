@@ -83,13 +83,13 @@ def make_slide_video(png: Path, m4a: Path, duration: float, idx: int, *,
     """Build one slide MP4. Returns the per-slide MP4 path under workdir.
 
     `lipsync_circle` is the pre-cropped circular MOV (caller decides whether
-    to make one — this module doesn't talk to fal directly).
+    to make one; this module doesn't talk to fal directly).
     """
     width, height = dimensions
     out = workdir / f"slide_{idx:02d}.mp4"
     pad_dur = duration + 0.15
 
-    # Variant 1: type=video — overlay an embedded clip inside the slide PNG.
+    # Variant 1: type=video. Overlay an embedded clip inside the slide PNG.
     if slide.get("type") == "video" and slide.get("video"):
         clip = Path(slide["video"])
         if not clip.is_absolute():
@@ -162,7 +162,7 @@ def _imageio_ffmpeg() -> str:
 
 def burn_captions(raw_mp4: Path, ass_path: Path, out_path: Path) -> Path:
     """Burn ASS captions into a video using libass. Raises CalledProcessError on
-    failure — the caller can catch and fall back to shipping the raw_mp4 + an
+    failure. The caller can catch and fall back to shipping the raw_mp4 + an
     SRT sidecar.
     """
     ffmpeg_bin = _imageio_ffmpeg()

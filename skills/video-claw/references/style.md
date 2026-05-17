@@ -40,10 +40,10 @@ Padding is `64px 96px` for horizontal, `96px 72px` for short.
 
 ## Helper classes
 
-- `.accent` — amber text
-- `.strike` — warm red-orange text
-- `.good` — green text
-- `.muted` — secondary gray text
+- `.accent`: amber text
+- `.strike`: warm red-orange text
+- `.good`: green text
+- `.muted`: secondary gray text
 
 ## Layout patterns
 

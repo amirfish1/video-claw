@@ -3,7 +3,7 @@
 A project is a directory with `slides.py` (or `project.json`) that defines a SLIDES
 list. We also accept a single-file `project.py` containing SLIDES + optional CONFIG.
 
-slides.py format (preferred — Python so narration strings can be multi-line clean):
+slides.py format (preferred: Python so narration strings can be multi-line clean):
 
     CONFIG = {
         "title": "Skill demo",

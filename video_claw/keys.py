@@ -33,7 +33,7 @@ ALIASES: Dict[str, str] = {
 
 
 def mask(value: str) -> str:
-    """Return a short hint for a key — safe to print. `sk_3cea...8ba6` style."""
+    """Return a short hint for a key, safe to print. `sk_3cea...8ba6` style."""
     if not value:
         return "(empty)"
     if len(value) <= 8:
@@ -118,7 +118,7 @@ def test_elevenlabs(api_key: str) -> tuple[bool, str]:
 
 
 def test_fal(api_key: str) -> tuple[bool, str]:
-    """Try to initiate a fal storage upload — tests auth without spending tokens.
+    """Try to initiate a fal storage upload. Tests auth without spending tokens.
 
     fal returns 200 with a presigned upload URL on success; 401/403 on bad key.
     We never PUT the bytes; the initiate call alone validates the credential.

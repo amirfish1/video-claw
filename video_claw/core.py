@@ -200,7 +200,7 @@ def make_video(slides: List[Dict[str, Any]], *,
     # Phase 1: render slide PNGs (cheap + no third-party cost).
     render_pngs(slides, workdir=workdir, project_dir=project_dir, dimensions=dimensions)
 
-    # Phase 2: preview gate — give the user a chance to abort before TTS spend.
+    # Phase 2: preview gate. Give the user a chance to abort before TTS spend.
     if not skip_preview:
         ok = preview_mod.prompt_user(workdir, slides, orientation, auto_yes=auto_yes)
         if not ok:

@@ -66,7 +66,7 @@ class Cache:
         """Return a cached file if present; otherwise call `generator(out_path)` and cache.
 
         The generator MUST write its bytes to the given out_path; we don't manage
-        atomic writes — generators that may fail mid-write should write to a temp
+        atomic writes. Generators that may fail mid-write should write to a temp
         file and `os.rename` into place.
         """
         out_path = self.path(kind, key_inputs, ext)
