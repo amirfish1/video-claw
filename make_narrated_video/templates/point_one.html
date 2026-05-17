@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .stack { display: flex; flex-direction: column; gap: 18px; max-width: 1500px; }
+  .stat-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    margin-top: 24px;
+  }
+  .stat {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 26px 28px;
+  }
+  .stat .v {
+    font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -0.03em;
+    color: var(--accent);
+  }
+  .stat .l {
+    font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin-top: 10px;
+  }
+  body.canvas.v .stat-row { grid-template-columns: 1fr; }
+  body.canvas.v .stat .v { font-size: 72px; }
+</style>
+</head>
+<body class="canvas h">
+  <div class="eyebrow">Section 1</div>
+  <h1>Headline of the point you're making.</h1>
+  <div class="stack">
+    <p>
+      One supporting paragraph. Keep it tight. Two sentences max.
+      The narration carries the rest of the meaning, not the slide.
+    </p>
+    <div class="stat-row">
+      <div class="stat"><div class="v">42</div><div class="l">stat label</div></div>
+      <div class="stat"><div class="v">3.2x</div><div class="l">stat label</div></div>
+      <div class="stat"><div class="v">94%</div><div class="l">stat label</div></div>
+    </div>
+  </div>
+</body></html>
