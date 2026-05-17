@@ -6,7 +6,7 @@ A minimal 3-slide narrated video to verify everything works end-to-end.
 
 ```
 cd examples/quickstart
-make-narrated-video render
+video-claw render
 ```
 
 You'll see the preview gate in your browser. Press `y` in the terminal to

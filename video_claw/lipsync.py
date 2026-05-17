@@ -28,7 +28,7 @@ def _fal_key() -> str:
     if not api_key:
         raise RuntimeError(
             "fal.ai lipsync requested but no FAL_API_KEY found.\n"
-            "Run: make-narrated-video keys set FAL=<your-key>"
+            "Run: video-claw keys set FAL=<your-key>"
         )
     return api_key
 

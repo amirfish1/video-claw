@@ -115,7 +115,7 @@ def write_master_ass(entries: List[Entry], out_path: Path, *,
     margin_v = 80 if width >= height else 220
     fontsize = 44 if width >= 1600 else 56
     header = f"""[Script Info]
-Title: make-narrated-video captions
+Title: video-claw captions
 ScriptType: v4.00+
 PlayResX: {width}
 PlayResY: {height}

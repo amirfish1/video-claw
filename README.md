@@ -1,14 +1,14 @@
-# make-narrated-video
+# video-claw
 
 Render narrated slide videos from a list of HTML slides + narration text. Optional lip-synced AI presenter via fal.ai OmniHuman. Burned-in word-aligned captions via ElevenLabs.
 
 Built for macOS. Works on Linux. Single Python package, single CLI.
 
 ```
-make-narrated-video init my-vid
+video-claw init my-vid
 cd my-vid
-make-narrated-video keys set EL=sk_...   # or export ELEVENLABS_API_KEY
-make-narrated-video render
+video-claw keys set EL=sk_...   # or export ELEVENLABS_API_KEY
+video-claw render
 ```
 
 ## What you get
@@ -24,7 +24,7 @@ make-narrated-video render
 ## Install
 
 ```
-pip install git+https://github.com/amirfish1/make-narrated-video
+pip install git+https://github.com/amirfish1/video-claw
 ```
 
 You also need:
@@ -43,11 +43,11 @@ You need at least one TTS provider key. Lipsync is opt-in.
 | `FAL_API_KEY` | Optional lipsync (OmniHuman 1.5) | https://fal.ai/dashboard/keys |
 | `DEEPGRAM_API_KEY` | Optional cheaper TTS (no captions) | https://console.deepgram.com/project/_/api-keys |
 
-Store them once at `~/.config/make-narrated-video/keys.env` (mode 0600):
+Store them once at `~/.config/video-claw/keys.env` (mode 0600):
 
 ```
-make-narrated-video keys set EL=sk_xxx FAL=xxx
-make-narrated-video keys test
+video-claw keys set EL=sk_xxx FAL=xxx
+video-claw keys test
 ```
 
 Or just export as env vars: `ELEVENLABS_API_KEY=...`. Env wins over the file.
@@ -68,7 +68,7 @@ The content-hash cache means you only pay once per unique narration string + voi
 
 ## Project layout
 
-A project is a directory. After `make-narrated-video init my-vid`:
+A project is a directory. After `video-claw init my-vid`:
 
 ```
 my-vid/
@@ -148,13 +148,13 @@ Optional fields on any slide:
 ## Commands
 
 ```
-make-narrated-video init [path]       # scaffold a project
-make-narrated-video render            # the main command
-make-narrated-video preview           # render slide PNGs only, no TTS spend
-make-narrated-video keys list         # show configured keys (masked)
-make-narrated-video keys set EL=sk_x  # save a key
-make-narrated-video keys test         # verify each key against its provider
-make-narrated-video keys path         # print the keys.env path
+video-claw init [path]       # scaffold a project
+video-claw render            # the main command
+video-claw preview           # render slide PNGs only, no TTS spend
+video-claw keys list         # show configured keys (masked)
+video-claw keys set EL=sk_x  # save a key
+video-claw keys test         # verify each key against its provider
+video-claw keys path         # print the keys.env path
 ```
 
 `render` flags:

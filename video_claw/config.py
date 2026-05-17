@@ -117,7 +117,7 @@ def load(project_dir: Path) -> Project:
     else:
         raise FileNotFoundError(
             f"No slides.py or project.json in {project_dir}.\n"
-            "Run `make-narrated-video init` to scaffold a project."
+            "Run `video-claw init` to scaffold a project."
         )
 
     config = _deep_merge(DEFAULT_CONFIG, user_cfg)
@@ -127,7 +127,7 @@ def load(project_dir: Path) -> Project:
 SAMPLE_SLIDES_PY = '''"""Project: %(title)s
 
 Edit SLIDES (the order, the narration) and CONFIG (orientation, voice) below.
-Then run `make-narrated-video render` from this directory.
+Then run `video-claw render` from this directory.
 """
 
 CONFIG = {

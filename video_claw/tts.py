@@ -69,7 +69,7 @@ def make_audio_elevenlabs(text: str, idx: int, *, workdir: Path,
     if not api_key:
         raise RuntimeError(
             "ElevenLabs requested but no ELEVENLABS_API_KEY found.\n"
-            "Run: make-narrated-video keys set EL=<your-key>"
+            "Run: video-claw keys set EL=<your-key>"
         )
 
     voice_id = tts_cfg.get("voice_id", DEFAULT_TTS["voice_id"])
@@ -135,7 +135,7 @@ def make_audio_deepgram(text: str, idx: int, *, workdir: Path,
     if not api_key:
         raise RuntimeError(
             "Deepgram requested but no DEEPGRAM_API_KEY found.\n"
-            "Run: make-narrated-video keys set DG=<your-key>"
+            "Run: video-claw keys set DG=<your-key>"
         )
     voice = tts_cfg.get("deepgram_voice", DEFAULT_TTS["deepgram_voice"])
     rate = float(tts_cfg.get("speaking_rate", DEFAULT_TTS["speaking_rate"]))

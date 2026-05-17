@@ -1,7 +1,7 @@
 """Quickstart: a 3-slide narrated video to verify the install works.
 
 Run from this directory:
-    make-narrated-video render
+    video-claw render
 
 If ELEVENLABS_API_KEY is set (env or `keys set`), this will speak each
 narration line in the Jessica voice, burn word-aligned captions, and write
@@ -9,7 +9,7 @@ out/quickstart.mp4. Total render time: ~30 sec on first run, ~2 sec on re-runs.
 """
 
 CONFIG = {
-    "title": "make-narrated-video quickstart",
+    "title": "video-claw quickstart",
     "orientation": "horizontal",   # try "short" to render 1080x1920
     "out_path": "out/quickstart.mp4",
     "tts": {

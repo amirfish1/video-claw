@@ -3,7 +3,7 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "make-narrated-video"
+name = "video-claw"
 version = "0.1.0"
 description = "Render narrated slide videos from HTML + a slide list. ElevenLabs TTS + optional fal.ai lipsync."
 readme = "README.md"
@@ -25,14 +25,14 @@ dependencies = [
 ]
 
 [project.scripts]
-make-narrated-video = "make_narrated_video.cli:main"
+video-claw = "video_claw.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/amirfish1/make-narrated-video"
-Issues = "https://github.com/amirfish1/make-narrated-video/issues"
+Homepage = "https://github.com/amirfish1/video-claw"
+Issues = "https://github.com/amirfish1/video-claw/issues"
 
 [tool.setuptools.packages.find]
-include = ["make_narrated_video*"]
+include = ["video_claw*"]
 
 [tool.setuptools.package-data]
-make_narrated_video = ["templates/*.html", "templates/*.css", "assets/*.png"]
+video_claw = ["templates/*.html", "templates/*.css", "assets/*.png"]

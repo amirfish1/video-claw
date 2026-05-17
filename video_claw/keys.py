@@ -1,8 +1,8 @@
-"""Key management: XDG-style storage at ~/.config/make-narrated-video/keys.env.
+"""Key management: XDG-style storage at ~/.config/video-claw/keys.env.
 
 Lookup order for any provider key:
   1. Environment variable (e.g. ELEVENLABS_API_KEY)
-  2. ~/.config/make-narrated-video/keys.env
+  2. ~/.config/video-claw/keys.env
   3. None -> caller decides whether the provider is required
 
 Never echo keys in logs; `mask()` reduces a key to a hint.
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 XDG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config")))
-CONFIG_DIR = XDG_HOME / "make-narrated-video"
+CONFIG_DIR = XDG_HOME / "video-claw"
 KEYS_FILE = CONFIG_DIR / "keys.env"
 
 # Map short aliases used in CLI (`keys set EL=...`) to full env var names.
@@ -86,8 +86,8 @@ def save_keys(updates: Dict[str, str]) -> Path:
         canonical = ALIASES.get(raw.upper(), raw.upper())
         canonical_updates[canonical] = val
     merged = {**existing, **canonical_updates}
-    body = "# make-narrated-video API keys. Do not check this file in.\n"
-    body += "# Edit via: make-narrated-video keys set NAME=value\n"
+    body = "# video-claw API keys. Do not check this file in.\n"
+    body += "# Edit via: video-claw keys set NAME=value\n"
     for k, v in sorted(merged.items()):
         body += f"{k}={v}\n"
     KEYS_FILE.write_text(body)

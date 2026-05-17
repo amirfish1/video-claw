@@ -57,7 +57,7 @@ def _build_index(out_dir: Path, slides: Iterable[dict], orientation: str) -> Pat
 
     html = f"""<!doctype html>
 <meta charset="utf-8">
-<title>make-narrated-video preview</title>
+<title>video-claw preview</title>
 <style>
   :root {{
     --bg: #0f1216; --panel: #161b22; --line: #2c333d;

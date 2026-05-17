@@ -1,12 +1,12 @@
 ---
-name: make-narrated-video
-description: Use when the user wants to produce a narrated slide video (explainer, demo, walkthrough, short, reel) with AI TTS, optional lip-synced presenter, and burned-in captions. Wraps the `make-narrated-video` CLI.
+name: video-claw
+description: Use when the user wants to produce a narrated slide video (explainer, demo, walkthrough, short, reel) with AI TTS, optional lip-synced presenter, and burned-in captions. Wraps the `video-claw` CLI.
 ---
 
 # Making a narrated video
 
-This skill drives the `make-narrated-video` Python package
-(https://github.com/amirfish1/make-narrated-video).
+This skill drives the `video-claw` Python package
+(https://github.com/amirfish1/video-claw).
 
 ## When to use this skill
 
@@ -22,13 +22,13 @@ captioned videos.
 ## Setup check (do this once per repo)
 
 ```
-make-narrated-video --version           # confirm CLI is installed
-make-narrated-video keys list           # confirm at least ELEVENLABS_API_KEY is set
+video-claw --version           # confirm CLI is installed
+video-claw keys list           # confirm at least ELEVENLABS_API_KEY is set
 ```
 
 If the CLI is missing:
 ```
-pip install git+https://github.com/amirfish1/make-narrated-video
+pip install git+https://github.com/amirfish1/video-claw
 pip install playwright && playwright install chromium
 pip install imageio-ffmpeg   # optional, fixes caption burn on stock-Homebrew ffmpeg
 ```
@@ -36,8 +36,8 @@ pip install imageio-ffmpeg   # optional, fixes caption burn on stock-Homebrew ff
 If keys are missing, ask the user for an ElevenLabs key (required) and
 optionally a fal.ai key (only if they want lip-synced presenter shots):
 ```
-make-narrated-video keys set EL=sk_xxx FAL=xxx
-make-narrated-video keys test
+video-claw keys set EL=sk_xxx FAL=xxx
+video-claw keys test
 ```
 
 ## Workflow
@@ -59,7 +59,7 @@ Before writing anything, get these from the user:
 ### Step 2: Scaffold
 
 ```
-make-narrated-video init <project-name>
+video-claw init <project-name>
 cd <project-name>
 ```
 
@@ -88,7 +88,7 @@ paragraphs on the slide that the narration will also speak.
 ### Step 4: Preview gate (mandatory before TTS spend)
 
 ```
-make-narrated-video preview
+video-claw preview
 ```
 
 This renders every slide to PNG and opens a local grid view in the browser. The
@@ -101,7 +101,7 @@ cached so re-runs are fast.
 ### Step 5: Render
 
 ```
-make-narrated-video render
+video-claw render
 ```
 
 This re-runs the preview gate, then on `y`:
@@ -116,7 +116,7 @@ The cache is content-hashed — re-renders only re-do what changed. Tweak a sing
 narration string, re-render, only that slide regenerates TTS. Same for slide HTML
 (only the PNG re-renders) and lipsync (only re-runs if narration or avatar changed).
 
-To bypass all caches: `FORCE_REGEN=1 make-narrated-video render`.
+To bypass all caches: `FORCE_REGEN=1 video-claw render`.
 
 ## Hard rules
 
@@ -149,6 +149,6 @@ Tell the user the budget up front:
 
 ## Reference
 
-- Package source: https://github.com/amirfish1/make-narrated-video
+- Package source: https://github.com/amirfish1/video-claw
 - README: project root
-- CLI help: `make-narrated-video --help`, `make-narrated-video <subcommand> --help`
+- CLI help: `video-claw --help`, `video-claw <subcommand> --help`

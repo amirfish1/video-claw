@@ -1,8 +1,8 @@
-"""Command-line entry point for make-narrated-video.
+"""Command-line entry point for video-claw.
 
 Subcommands:
   init      Scaffold a new project in the current (or given) directory.
-  keys      Manage API keys at ~/.config/make-narrated-video/keys.env.
+  keys      Manage API keys at ~/.config/video-claw/keys.env.
               keys list                 Show which keys are set (masked).
               keys set NAME=value ...   Save one or more keys.
               keys test                 Hit each provider once to verify.
@@ -11,12 +11,12 @@ Subcommands:
   preview   Render slide PNGs and open the local preview gate without spending TTS.
 
 Most users do:
-  make-narrated-video init my-vid
+  video-claw init my-vid
   cd my-vid
-  make-narrated-video render
+  video-claw render
 
 Keys can be supplied via env vars (ELEVENLABS_API_KEY / FAL_API_KEY / DEEPGRAM_API_KEY)
-or stored once with `make-narrated-video keys set EL=sk_...`.
+or stored once with `video-claw keys set EL=sk_...`.
 """
 from __future__ import annotations
 import argparse
@@ -91,8 +91,8 @@ def cmd_init(args: argparse.Namespace) -> int:
     print(f"")
     print(f"Next steps:")
     print(f"  1. cd {target}")
-    print(f"  2. make-narrated-video keys set EL=sk_...   # if not in env")
-    print(f"  3. make-narrated-video render")
+    print(f"  2. video-claw keys set EL=sk_...   # if not in env")
+    print(f"  3. video-claw render")
     return 0
 
 
@@ -107,7 +107,7 @@ def cmd_keys(args: argparse.Namespace) -> int:
         all_keys = keys_mod.load_keys()
         if not all_keys:
             print("(no keys configured)")
-            print(f"Set with: make-narrated-video keys set EL=sk_... FAL=...")
+            print(f"Set with: video-claw keys set EL=sk_... FAL=...")
             print(f"Or export ELEVENLABS_API_KEY / FAL_API_KEY / DEEPGRAM_API_KEY.")
             return 0
         print(f"keys file: {keys_mod.KEYS_FILE}")
@@ -175,7 +175,7 @@ def _ensure_keys_for(project: cfg_mod.Project) -> Optional[str]:
     if missing:
         return (
             "Missing API keys:\n  - " + "\n  - ".join(missing)
-            + "\nSet via: make-narrated-video keys set EL=sk_... FAL=..."
+            + "\nSet via: video-claw keys set EL=sk_... FAL=..."
         )
     return None
 
@@ -235,10 +235,10 @@ def cmd_preview(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="make-narrated-video",
+        prog="video-claw",
         description="Render narrated slide videos from HTML + a slide list.",
     )
-    p.add_argument("--version", action="version", version=f"make-narrated-video {__version__}")
+    p.add_argument("--version", action="version", version=f"video-claw {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     pi = sub.add_parser("init", help="Scaffold a new project directory.")
