@@ -1,0 +1,31 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .code {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 32px 40px; font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 26px; line-height: 1.6; color: var(--text);
+    max-width: 1500px; margin-top: 32px;
+  }
+  .kw { color: var(--accent); }
+  .str { color: var(--good); }
+  .key { color: var(--strike); }
+  .comment { color: var(--muted); }
+</style>
+</head>
+<body class="canvas h">
+  <div class="eyebrow">Step two</div>
+  <h1>Claude writes the slides and narration.</h1>
+  <div class="code">
+<span class="comment"># slides.py</span><br>
+<span class="kw">SLIDES</span> = [<br>
+&nbsp;&nbsp;{ <span class="key">"html"</span>: <span class="str">"slides/intro.html"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"narration"</span>: <span class="str">"An SSD is solid state storage."</span> },<br>
+&nbsp;&nbsp;{ <span class="key">"html"</span>: <span class="str">"slides/how.html"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"narration"</span>: <span class="str">"It uses NAND flash, no moving parts."</span> },<br>
+&nbsp;&nbsp;<span class="comment"># ...</span><br>
+]
+  </div>
+</body></html>

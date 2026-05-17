@@ -166,14 +166,22 @@ def burn_captions(raw_mp4: Path, ass_path: Path, out_path: Path) -> Path:
     SRT sidecar.
     """
     ffmpeg_bin = _imageio_ffmpeg()
+    # ffmpeg 8.x rejects bare `ass=/path` (parses `/path` as an option name).
+    # Use the explicit `filename=` keyword with single-quoted value so the
+    # filter parser treats the path as a single value regardless of version.
     burn_cmd = [
         ffmpeg_bin, "-y", "-i", str(raw_mp4),
-        "-vf", f"ass={ass_path}",
+        "-vf", f"ass=filename='{ass_path}'",
         "-c:v", "libx264", "-pix_fmt", "yuv420p",
         "-c:a", "copy",
         str(out_path),
     ]
-    subprocess.run(burn_cmd, check=True, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL)
+    res = subprocess.run(burn_cmd, capture_output=True, text=True)
+    if res.returncode != 0:
+        raise subprocess.CalledProcessError(
+            res.returncode, burn_cmd,
+            output=res.stdout, stderr=res.stderr,
+        )
     return out_path
 
 

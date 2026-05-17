@@ -216,7 +216,8 @@ def make_video(slides: List[Dict[str, Any]], *,
             raise ValueError(f"slide {idx}: missing narration text")
         rate = float(slide.get("speed") or tts_cfg.get("speaking_rate", 1.0))
         slide_tts = {**tts_cfg, "speaking_rate": rate}
-        print(f"  slide {idx + 1}/{len(slides)}: TTS ({slide_tts['provider']})")
+        rate_tag = f" speed={rate}x" if abs(rate - 1.0) > 1e-3 else ""
+        print(f"  slide {idx + 1}/{len(slides)}: TTS ({slide_tts['provider']}){rate_tag}")
         m4a, dur = tts_mod.make_audio(narration, idx, workdir=workdir, cache=cache, tts_cfg=slide_tts)
 
         # Caption alignment is only produced by ElevenLabs.
@@ -272,9 +273,15 @@ def make_video(slides: List[Dict[str, Any]], *,
         try:
             ff.burn_captions(raw, ass_path, out_path)
         except Exception as e:  # noqa: BLE001
-            print(f"[captions] burn failed ({e}); shipping raw video + SRT sidecar")
             import shutil as _shutil
             _shutil.copyfile(raw, out_path)
+            stderr = getattr(e, "stderr", None) or ""
+            tail = stderr.strip().splitlines()[-2:] if isinstance(stderr, str) else []
+            print(f"[captions] burn failed; shipping raw MP4 + SRT sidecar at:")
+            print(f"             {srt_path}")
+            if tail:
+                print(f"           ffmpeg said: {' | '.join(tail)}")
+            print(f"           fix: pip install imageio-ffmpeg (homebrew ffmpeg lacks libass)")
     else:
         import shutil as _shutil
         _shutil.copyfile(raw, out_path)

@@ -14,9 +14,9 @@
   --line:    #2c333d;
   --text:    #ebebe8;
   --muted:   #8c919a;
-  --accent:  #fac85a;  /* amber — main highlight */
-  --strike:  #d97757;  /* warm red-orange — for "bad" stats / mistakes */
-  --good:    #7cb37c;  /* green — for "good" stats */
+  --accent:  #fac85a;  /* amber: main highlight */
+  --strike:  #d97757;  /* warm red-orange, for "bad" stats / mistakes */
+  --good:    #7cb37c;  /* green, for "good" stats */
   /* Brand-letter circle backgrounds for examples grids. */
   --c: #5b8def; --r: #c44a4a; --s: #888888;
 }
@@ -33,7 +33,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Canvas sizing — Chrome screenshots at body.clientWidth x clientHeight. */
+/* Canvas sizing. Chrome screenshots at body.clientWidth x clientHeight. */
 body.canvas {
   width: 1920px; height: 1080px;        /* default: horizontal */
   padding: 64px 96px;

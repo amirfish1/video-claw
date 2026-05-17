@@ -8,11 +8,12 @@ Workflow:
   5. Shut the server down.
 """
 from __future__ import annotations
-import contextlib
 import functools
 import http.server
+import shutil
 import socket
 import socketserver
+import subprocess
 import sys
 import threading
 import time
@@ -97,7 +98,7 @@ def _build_index(out_dir: Path, slides: Iterable[dict], orientation: str) -> Pat
     padding: 8px 16px; border-radius: 99px; font-size: 13px;
   }}
 </style>
-<div class="pill">Preview gate — switch to your terminal to continue</div>
+<div class="pill">Preview gate. Switch to your terminal to continue.</div>
 <h1>Slide preview ({orientation})</h1>
 <div class="lede">
   Inspect every slide visually before paying for TTS / lipsync.
@@ -133,11 +134,28 @@ def prompt_user(out_dir: Path, slides: Iterable[dict], orientation: str, *, auto
         t = threading.Thread(target=httpd.serve_forever, daemon=True)
         t.start()
         url = f"http://127.0.0.1:{port}/{idx_path.name}"
-        print(f"[preview] Opening {url}")
+        # Print a copy-paste banner FIRST so users always see the URL,
+        # even if the browser launcher silently fails (headless session,
+        # missing default browser, SSH, etc.).
+        bar = "=" * (len(url) + 18)
+        print(bar)
+        print(f"  preview at:  {url}")
+        print(bar)
         # Give the server a tick to spin up before opening the browser.
         time.sleep(0.2)
-        with contextlib.suppress(Exception):
-            webbrowser.open(url)
+        opened = False
+        try:
+            opened = bool(webbrowser.open(url))
+        except Exception:  # noqa: BLE001
+            opened = False
+        if not opened and sys.platform == "darwin" and shutil.which("open"):
+            try:
+                subprocess.run(["open", url], check=False)
+                opened = True
+            except Exception:  # noqa: BLE001
+                pass
+        if not opened:
+            print("[preview] could not auto-open a browser; copy the URL above.")
         try:
             ans = input("[preview] Proceed with TTS + lipsync? [y/N] ").strip().lower()
         except (KeyboardInterrupt, EOFError):

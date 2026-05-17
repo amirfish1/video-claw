@@ -98,7 +98,27 @@ def build_srt_for_slide(idx: int, offset_s: float, rate: float,
     return entries
 
 
+def _clamp_overlaps(entries: List[Entry]) -> List[Entry]:
+    """Ensure each caption's start is >= the previous caption's end.
+
+    ElevenLabs character timings can yield word boundaries that overlap by a
+    few ms once we round and group into chunks. Players accept overlap but it
+    looks sloppy when two captions are on-screen at once.
+    """
+    out: List[Entry] = []
+    prev_end = 0.0
+    for start, end, text in entries:
+        if start < prev_end:
+            start = prev_end + 0.001
+        if end <= start:
+            end = start + 0.05
+        out.append((start, end, text))
+        prev_end = end
+    return out
+
+
 def write_master_srt(entries: List[Entry], out_path: Path) -> None:
+    entries = _clamp_overlaps(entries)
     with out_path.open("w") as f:
         for i, (start, end, text) in enumerate(entries, start=1):
             f.write(f"{i}\n{fmt_srt_time(start)} --> {fmt_srt_time(end)}\n{text}\n\n")
@@ -130,7 +150,7 @@ Style: Default,Arial,{fontsize},&H00F5F5F2,&H000000FF,&H001A1A1A,&HA0000000,1,0,
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     parts = [header]
-    for (start, end, text) in entries:
+    for (start, end, text) in _clamp_overlaps(entries):
         t = text.replace("{", "\\{").replace("}", "\\}")
         parts.append(
             f"Dialogue: 0,{fmt_ass_time(start)},{fmt_ass_time(end)},Default,,0,0,0,,{t}\n"

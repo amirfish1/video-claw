@@ -1,14 +1,19 @@
-"""HTML -> PNG rendering via Chrome headless or Playwright Chromium fallback.
+"""HTML -> PNG rendering via Chrome headless.
 
 We look for a usable Chromium-class binary in this order:
   1. CHROME_BIN env var (explicit user override)
   2. /Applications/Google Chrome.app/Contents/MacOS/Google Chrome  (macOS)
   3. /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
   4. /Applications/Chromium.app/Contents/MacOS/Chromium
-  5. `chromium` / `google-chrome` / `chrome` on PATH (Linux/dev)
-  6. The bundled Playwright Chromium under ~/Library/Caches/ms-playwright/
+  5. /Applications/Brave Browser.app/Contents/MacOS/Brave Browser
+  6. `chromium` / `google-chrome` / `chrome` on PATH (Linux/dev)
+  7. The bundled Playwright Chromium under ~/Library/Caches/ms-playwright/
+     (only used if a session previously ran `playwright install chromium`;
+      not required for normal use)
 
 `render_html_to_png` writes one PNG per HTML file at the requested viewport.
+Playwright is not a Python dependency of this package; the renderer shells out
+to whichever Chromium binary it finds.
 """
 from __future__ import annotations
 import os
@@ -74,8 +79,9 @@ def render_html_to_png(html_path: Path, png_path: Path, width: int, height: int)
     if chrome is None:
         raise RuntimeError(
             "Couldn't find a Chrome/Chromium binary to render HTML.\n"
-            "Install Google Chrome (https://www.google.com/chrome/), set $CHROME_BIN,\n"
-            "or run: npx -y playwright install chromium\n"
+            "On macOS, install Google Chrome from https://www.google.com/chrome/.\n"
+            "On Linux, install `chromium` or `google-chrome` from your package manager.\n"
+            "Or point at an existing binary: CHROME_BIN=/path/to/chrome video-claw render"
         )
 
     html_path = html_path.resolve()

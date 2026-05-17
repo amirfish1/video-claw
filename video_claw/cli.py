@@ -64,7 +64,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     shared_css = tpl / "_shared.css"
     if shared_css.exists():
         shutil.copyfile(shared_css, slides_dir / "_shared.css")
-    for name in ("intro.html", "point_one.html", "outro.html"):
+    for name in ("intro.html", "tell_claude.html", "claude_writes.html", "outro.html"):
         src = tpl / name
         if src.exists():
             shutil.copyfile(src, slides_dir / name)
@@ -92,7 +92,8 @@ def cmd_init(args: argparse.Namespace) -> int:
     print(f"Next steps:")
     print(f"  1. cd {target}")
     print(f"  2. video-claw keys set EL=sk_...   # if not in env")
-    print(f"  3. video-claw render")
+    print(f"  3. video-claw preview              # eyeball the slides first")
+    print(f"  4. video-claw render               # spends EL + optional fal")
     return 0
 
 
@@ -140,12 +141,20 @@ def cmd_keys(args: argparse.Namespace) -> int:
 
     if action == "test":
         results = keys_mod.test_all()
+        # Required vs. optional. DEEPGRAM is only needed if you've configured
+        # the Deepgram TTS provider, so a missing DG key is not a failure.
+        optional_when_unset = {"DEEPGRAM_API_KEY", "FAL_API_KEY"}
         any_failed = False
         for name, (ok, msg) in results.items():
-            mark = "ok " if ok else "FAIL"
-            print(f"  [{mark}] {name}: {msg}")
-            if not ok and msg != "not set":
+            if ok:
+                mark = "ok "
+            elif msg == "not set" and name in optional_when_unset:
+                mark = "opt"
+                msg = "not set (optional)"
+            else:
+                mark = "FAIL"
                 any_failed = True
+            print(f"  [{mark}] {name}: {msg}")
         return 1 if any_failed else 0
 
     print(f"unknown keys action: {action}", file=sys.stderr)
