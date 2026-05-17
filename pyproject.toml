@@ -35,4 +35,9 @@ Issues = "https://github.com/amirfish1/video-claw/issues"
 include = ["video_claw*"]
 
 [tool.setuptools.package-data]
-video_claw = ["templates/*.html", "templates/*.css", "assets/*.png"]
+video_claw = [
+  "templates/*.html",
+  "templates/*.css",
+  "assets/*.png",
+  "skill_data/**/*.md",
+]

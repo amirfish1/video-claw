@@ -1,25 +1,27 @@
 """Command-line entry point for video-claw.
 
 Subcommands:
-  init      Scaffold a new project in the current (or given) directory.
-  keys      Manage API keys at ~/.config/video-claw/keys.env.
-              keys list                 Show which keys are set (masked).
-              keys set NAME=value ...   Save one or more keys.
-              keys test                 Hit each provider once to verify.
-              keys path                 Print the keys file path.
-  render    Render the video for a project directory.
-  preview   Render slide PNGs and open the local preview gate without spending TTS.
+  init           Scaffold a new project in the current (or given) directory.
+  install-skill  Register the bundled Claude Code skill into ~/.claude/skills/.
+  keys           Manage API keys at ~/.config/video-claw/keys.env.
+                   keys list                 Show which keys are set (masked).
+                   keys set NAME=value ...   Save one or more keys.
+                   keys test                 Hit each provider once to verify.
+                   keys path                 Print the keys file path.
+  render         Render the video for a project directory.
+  preview        Render slide PNGs and open the local preview gate without spending TTS.
 
-Most users do:
-  video-claw init my-vid
-  cd my-vid
-  video-claw render
+The intended workflow is Claude-driven: after `pipx install` and
+`video-claw install-skill`, the user opens Claude Code and asks for a video
+in natural language. Claude drives `init` / `render` for them. The CLI is
+fully usable manually too; see the README for the manual flow.
 
 Keys can be supplied via env vars (ELEVENLABS_API_KEY / FAL_API_KEY / DEEPGRAM_API_KEY)
 or stored once with `video-claw keys set EL=sk_...`.
 """
 from __future__ import annotations
 import argparse
+import importlib.resources
 import re
 import shutil
 import sys
@@ -30,6 +32,10 @@ from . import __version__
 from . import config as cfg_mod
 from . import core
 from . import keys as keys_mod
+
+
+SKILL_NAME = "video-claw"
+SKILL_TARGET = Path.home() / ".claude" / "skills" / SKILL_NAME
 
 
 def _slugify(s: str) -> str:
@@ -94,6 +100,70 @@ def cmd_init(args: argparse.Namespace) -> int:
     print(f"  2. video-claw keys set EL=sk_...   # if not in env")
     print(f"  3. video-claw preview              # eyeball the slides first")
     print(f"  4. video-claw render               # spends EL + optional fal")
+    print(f"")
+    print(f"If Claude Code is in the picture, run `video-claw install-skill` once")
+    print(f"so it knows to drive this for you on natural-language requests.")
+    return 0
+
+
+def _iter_skill_files() -> List[Path]:
+    """List every file the bundled skill ships with, as relative paths."""
+    root = importlib.resources.files("video_claw") / "skill_data" / SKILL_NAME
+    out: List[Path] = []
+    for entry in root.iterdir():
+        if entry.is_file():
+            out.append(Path(entry.name))
+        elif entry.is_dir():
+            for sub in entry.iterdir():
+                if sub.is_file():
+                    out.append(Path(entry.name) / sub.name)
+    return out
+
+
+def cmd_install_skill(args: argparse.Namespace) -> int:
+    """Copy the bundled skill from package data into ~/.claude/skills/video-claw/.
+
+    Idempotent: re-runs overwrite files we own. If the target directory exists
+    and contains files NOT in the package manifest, refuses unless --force.
+    """
+    source_root = importlib.resources.files("video_claw") / "skill_data" / SKILL_NAME
+    if not source_root.is_dir():
+        print(
+            "error: bundled skill data not found in the installed package.\n"
+            "This usually means an old install. Try: pipx upgrade video-claw",
+            file=sys.stderr,
+        )
+        return 2
+
+    owned = {str(p) for p in _iter_skill_files()}
+    target = SKILL_TARGET
+
+    if target.exists():
+        existing = []
+        for p in target.rglob("*"):
+            if p.is_file():
+                rel = str(p.relative_to(target))
+                existing.append(rel)
+        foreign = [p for p in existing if p not in owned]
+        if foreign and not args.force:
+            print(
+                f"error: {target} contains files not from this package.\n"
+                f"  conflicts: {', '.join(sorted(foreign))}\n"
+                f"  re-run with --force to overwrite anyway.",
+                file=sys.stderr,
+            )
+            return 2
+
+    target.mkdir(parents=True, exist_ok=True)
+    for rel in _iter_skill_files():
+        src = source_root.joinpath(*rel.parts)
+        dst = target / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_bytes(src.read_bytes())
+
+    print(f"  installed: {target}")
+    print(f"  files:     {len(owned)}")
+    print(f"  Claude Code will pick up the skill next time you start a session.")
     return 0
 
 
@@ -258,6 +328,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Video aspect (horizontal=1920x1080, short=1080x1920).",
     )
     pi.set_defaults(func=cmd_init)
+
+    ps = sub.add_parser(
+        "install-skill",
+        help="Register the bundled Claude Code skill into ~/.claude/skills/.",
+    )
+    ps.add_argument(
+        "--force", action="store_true",
+        help="Overwrite the target dir even if it contains foreign files.",
+    )
+    ps.set_defaults(func=cmd_install_skill)
 
     pk = sub.add_parser("keys", help="Manage API keys.")
     pk.add_argument("action", choices=["list", "set", "test", "path"])
