@@ -1,24 +1,33 @@
 # video-claw
 
-Render narrated slide videos from a list of HTML slides plus narration text.
+Narrated slide videos for people who would rather describe a video than
+storyboard one. You tell Claude Code what you want. Claude writes the
+slides and narration. video-claw ships the MP4.
+
 Optional lip-synced AI presenter via fal.ai OmniHuman. Optional burned-in
 word-aligned captions via ElevenLabs.
 
-Built for macOS. Works on Linux. Single Python package, single CLI.
+Built for macOS. Works on Linux.
 
-The pitch: you describe what you want, Claude (Code) writes the slides and
-narration, video-claw ships the MP4. The package includes a Claude skill
-that primes any Claude Code session in your project with the conventions.
+## Quickstart
 
 ```
+# 1. One-time install
 pipx install git+https://github.com/amirfish1/video-claw
-video-claw init my-vid && cd my-vid
-video-claw keys set EL=sk_...   # or export ELEVENLABS_API_KEY
-video-claw render
+video-claw install-skill
 ```
 
-That ships a self-referential ~30-second video about what video-claw does.
-Replace `slides.py` with your own content (or ask Claude to) and re-render.
+Then open Claude Code in any directory and say:
+
+> "Make me a 30-second video about how SSDs work."
+
+Claude reads the video-claw skill, drafts `slides.py` + the HTML files,
+asks for any missing API keys, runs `video-claw render`, and hands you the
+MP4 in `out/`. You never touch the CLI directly unless you want to.
+
+The skill triggers on natural-language prompts like "make a video about X",
+"turn this outline into a narrated walkthrough", "build a short for
+Shorts/TikTok/Reels". No slash command, no remembered syntax.
 
 ## What you get
 
@@ -34,30 +43,33 @@ Replace `slides.py` with your own content (or ask Claude to) and re-render.
 - **Preview gate.** Local web server shows every slide PNG in a grid before
   any paid API is hit. Press `y` to spend, anything else to abort.
 - **Content-hash cache.** Re-runs are seconds, not minutes. Iterate freely.
-- **Claude skill.** `skills/video-claw/SKILL.md` teaches Claude Code the
-  schema, the design rules, and the workflow. Install once, use in any
-  project.
+- **Claude skill ships in the box.** `video-claw install-skill` copies the
+  bundled skill into `~/.claude/skills/video-claw/`. Any Claude Code
+  session, in any directory, can drive video-claw on natural-language
+  prompts after that.
 
 ## Install
 
-Recommended: pipx (puts the CLI on PATH in its own venv).
-
 ```
 pipx install git+https://github.com/amirfish1/video-claw
+video-claw install-skill
 ```
 
-If pipx is missing: `brew install pipx`.
+`pipx` puts the CLI on PATH in its own venv (works on stock Homebrew Python
+where plain `pip install` would fail via PEP 668). If pipx is missing:
+`brew install pipx`.
 
-Alternative inside a project venv:
+When you upgrade with `pipx upgrade video-claw`, re-run `video-claw
+install-skill` to pick up the latest SKILL.md.
+
+### Manual venv install (if you don't want pipx)
 
 ```
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install git+https://github.com/amirfish1/video-claw
+video-claw install-skill
 ```
-
-Plain `pip install` outside a venv will fail on stock Homebrew Python because
-of PEP 668. Use pipx or a venv.
 
 ### Prerequisites
 
@@ -69,20 +81,6 @@ of PEP 668. Use pipx or a venv.
   caption burn-in. The package falls back to shipping an SRT sidecar in that
   case. To burn captions into the MP4, install `imageio-ffmpeg` (which carries
   a libass-enabled binary): `pipx inject video-claw imageio-ffmpeg`.
-
-### Install the Claude skill
-
-If you use Claude Code, install the skill so it triggers on phrases like
-"make me a video about X":
-
-```
-mkdir -p ~/.claude/skills
-ln -s "$(pipx environment --value PIPX_LOCAL_VENVS)/video-claw/lib/python*/site-packages/../../../../skills/video-claw" ~/.claude/skills/video-claw
-```
-
-Or simply clone the repo and symlink `skills/video-claw` into
-`~/.claude/skills/video-claw`. The skill is a single markdown file plus a
-`references/` subdirectory.
 
 ## API keys
 
@@ -120,6 +118,25 @@ video that's roughly $0.10. Captions need ElevenLabs.
 
 The content-hash cache means you only pay once per unique narration +
 voice + speed. Re-render to fix a CSS typo: free.
+
+## Manual CLI (without Claude)
+
+You can drive video-claw directly from the shell if you want. This is the
+loop Claude runs for you under the hood:
+
+```
+video-claw init my-vid          # scaffold a project directory
+cd my-vid
+video-claw keys set EL=sk_...   # or export ELEVENLABS_API_KEY
+video-claw preview              # eyeball the slide PNGs first (no spend)
+video-claw render               # spends EL + optional fal, ships out/<name>.mp4
+```
+
+Out of the box, `init` scaffolds a 4-slide self-referential demo. Running
+`video-claw render` immediately produces a working ~30-second video about
+what video-claw does, useful as a sanity check on your install. To make
+your own video, overwrite `slides.py` and the HTML files in `slides/`
+(by hand, or by asking Claude).
 
 ## Project layout
 
