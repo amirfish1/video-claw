@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "make-narrated-video"
+version = "0.1.0"
+description = "Render narrated slide videos from HTML + a slide list. ElevenLabs TTS + optional fal.ai lipsync."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Amir Fish" }]
+license = { text = "MIT" }
+keywords = ["video", "tts", "elevenlabs", "fal", "narration", "slides", "lipsync"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = [
+  "Pillow>=10.0",
+]
+
+[project.scripts]
+make-narrated-video = "make_narrated_video.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/amirfish1/make-narrated-video"
+Issues = "https://github.com/amirfish1/make-narrated-video/issues"
+
+[tool.setuptools.packages.find]
+include = ["make_narrated_video*"]
+
+[tool.setuptools.package-data]
+make_narrated_video = ["templates/*.html", "templates/*.css", "assets/*.png"]

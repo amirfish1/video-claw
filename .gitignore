@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+
+# Project-local render artifacts
+video_build/
+*.mp4
+!examples/**/expected.mp4
+captions.srt
+captions.ass
+
+# Project keys (should never live in the repo)
+keys.env
+.env
+.env.local
+
+.DS_Store
