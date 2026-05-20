@@ -179,7 +179,8 @@ def make_video(slides: List[Dict[str, Any]], *,
                tts_cfg: Optional[Dict[str, Any]] = None,
                lipsync_cfg: Optional[Dict[str, Any]] = None,
                auto_yes: bool = False,
-               skip_preview: bool = False) -> Path:
+               skip_preview: bool = False,
+               preview_ttl: Optional[int] = None) -> Path:
     """End-to-end: PNGs → preview gate → TTS → optional lipsync → slide MP4s →
     concat → caption burn. Returns the final MP4 path.
     """
@@ -202,7 +203,11 @@ def make_video(slides: List[Dict[str, Any]], *,
 
     # Phase 2: preview gate. Give the user a chance to abort before TTS spend.
     if not skip_preview:
-        ok = preview_mod.prompt_user(workdir, slides, orientation, auto_yes=auto_yes)
+        ok = preview_mod.prompt_user(
+            workdir, slides, orientation,
+            auto_yes=auto_yes,
+            preview_ttl=preview_ttl,
+        )
         if not ok:
             raise SystemExit("aborted at preview gate")
 

@@ -2,14 +2,25 @@
 
 Workflow:
   1. Engine has rendered every slide PNG into `out_dir`.
-  2. We start an HTTP server on 127.0.0.1 (random free port).
+  2. We spawn a detached child process that serves `out_dir` on a random free port.
   3. Open the user's browser to the grid view.
   4. Wait for `input()` ("y" to proceed, anything else to abort).
-  5. Shut the server down.
+  5. Render continues in the parent. The child server stays up for `preview_ttl`
+     seconds so the URL remains clickable long after `video-claw render` returns.
+
+TTL resolution order:
+  * explicit `preview_ttl` argument to `prompt_user`
+  * env var `VIDEO_CLAW_PREVIEW_TTL`
+  * default: 3600 (interactive TTY) or 60 (headless / CI)
+
+`preview_ttl=0` keeps the legacy behavior: server dies the instant the user
+confirms or aborts. Negative values are rejected at the CLI parser.
 """
 from __future__ import annotations
+import contextlib
 import functools
 import http.server
+import os
 import shutil
 import socket
 import socketserver
@@ -19,7 +30,11 @@ import threading
 import time
 import webbrowser
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
+
+
+DEFAULT_TTL_INTERACTIVE = 3600
+DEFAULT_TTL_HEADLESS = 60
 
 
 def _free_port() -> int:
@@ -28,6 +43,49 @@ def _free_port() -> int:
     port = s.getsockname()[1]
     s.close()
     return port
+
+
+def _default_ttl() -> int:
+    # Headless / CI fallback: don't let a forgotten preview hog a port forever.
+    try:
+        tty = os.isatty(0)
+    except Exception:
+        tty = False
+    return DEFAULT_TTL_INTERACTIVE if tty else DEFAULT_TTL_HEADLESS
+
+
+def resolve_ttl(explicit: Optional[int]) -> int:
+    """Pick the TTL value, honoring the explicit arg, then env, then the default.
+
+    Negative values are normalized to 0 here as a defence-in-depth check —
+    the CLI parser already rejects negatives with a clear error.
+    """
+    if explicit is not None:
+        return max(0, int(explicit))
+    env_val = os.environ.get("VIDEO_CLAW_PREVIEW_TTL")
+    if env_val is not None and env_val.strip() != "":
+        try:
+            return max(0, int(env_val))
+        except ValueError:
+            print(
+                f"[preview] ignoring invalid VIDEO_CLAW_PREVIEW_TTL={env_val!r} "
+                "(want an integer number of seconds)",
+                file=sys.stderr,
+            )
+    return _default_ttl()
+
+
+def _fmt_duration(seconds: int) -> str:
+    if seconds <= 0:
+        return "0s"
+    if seconds < 60:
+        return f"{seconds}s"
+    if seconds < 3600:
+        m, s = divmod(seconds, 60)
+        return f"{m}m{s}s" if s else f"{m}m"
+    h, rem = divmod(seconds, 3600)
+    m, _ = divmod(rem, 60)
+    return f"{h}h{m}m" if m else f"{h}h"
 
 
 def _build_index(out_dir: Path, slides: Iterable[dict], orientation: str) -> Path:
@@ -118,18 +176,134 @@ class _QuietHandler(http.server.SimpleHTTPRequestHandler):
         return  # swallow per-request stdout chatter
 
 
-def prompt_user(out_dir: Path, slides: Iterable[dict], orientation: str, *, auto_yes: bool = False) -> bool:
-    """Open the preview, wait on stdin, return True if the user typed 'y' or 'yes'."""
+def _open_browser(url: str) -> None:
+    """Best-effort browser launch with a macOS `open` fallback.
+
+    `webbrowser.open` sometimes returns success without actually doing anything
+    (headless SSH, kiosk-mode terminal, missing default browser). On macOS we
+    fall back to `/usr/bin/open`. If both fail, the caller has already printed
+    the URL banner so the user can copy-paste.
+    """
+    opened = False
+    try:
+        opened = bool(webbrowser.open(url))
+    except Exception:  # noqa: BLE001
+        opened = False
+    if not opened and sys.platform == "darwin" and shutil.which("open"):
+        try:
+            subprocess.run(["open", url], check=False)
+            opened = True
+        except Exception:  # noqa: BLE001
+            pass
+    if not opened:
+        print("[preview] could not auto-open a browser; copy the URL above.")
+
+
+def _spawn_detached_server(out_dir: Path, port: int, ttl: int) -> Optional[subprocess.Popen]:
+    """Fork a detached `python -m video_claw.preview_server` that owns the socket.
+
+    Returns the Popen handle (mostly for tests). The child is fully detached via
+    `start_new_session=True`; closing the parent terminal will not reap it.
+    Returns None if Popen itself fails — caller falls back to the legacy
+    in-process server lifetime.
+    """
+    cmd = [
+        sys.executable, "-m", "video_claw.preview_server",
+        "--dir", str(out_dir),
+        "--port", str(port),
+        "--ttl", str(ttl),
+    ]
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,  # equivalent to os.setsid in the child
+            close_fds=True,
+        )
+    except Exception as e:
+        print(f"[preview] failed to spawn detached server: {e}", file=sys.stderr)
+        return None
+    # Give the child a moment to bind the port before the browser request lands.
+    time.sleep(0.3)
+    return proc
+
+
+def prompt_user(
+    out_dir: Path,
+    slides: Iterable[dict],
+    orientation: str,
+    *,
+    auto_yes: bool = False,
+    preview_ttl: Optional[int] = None,
+) -> bool:
+    """Open the preview, wait on stdin, return True if the user typed 'y' or 'yes'.
+
+    The HTTP server is run in a detached child process so the URL stays clickable
+    for `preview_ttl` seconds after the user confirms (default 1h interactive,
+    60s headless). Pass `preview_ttl=0` to restore the legacy "die on confirm"
+    behavior.
+    """
     slides = list(slides)
     idx_path = _build_index(out_dir, slides, orientation)
+    ttl = resolve_ttl(preview_ttl)
 
     if auto_yes:
-        print("[preview] --yes flag set; skipping interactive gate.")
+        # Still honor the TTL: spin up a detached server so the URL works
+        # even when no human is pressing y (useful for "render then look later").
+        if ttl > 0:
+            port = _free_port()
+            proc = _spawn_detached_server(out_dir, port, ttl)
+            if proc is not None:
+                url = f"http://127.0.0.1:{port}/{idx_path.name}"
+                print(f"[preview] --yes flag set; skipping interactive gate.")
+                print(f"[preview] gate kept open at {url} for {_fmt_duration(ttl)} after confirm")
+        else:
+            print("[preview] --yes flag set; skipping interactive gate.")
         return True
 
+    if ttl > 0:
+        # Detached-child flow: child owns the server, parent only handles stdin.
+        port = _free_port()
+        proc = _spawn_detached_server(out_dir, port, ttl)
+        if proc is None:
+            # Fall back to legacy in-process flow.
+            return _prompt_user_legacy(out_dir, idx_path)
+        url = f"http://127.0.0.1:{port}/{idx_path.name}"
+        # Copy-paste banner first so the URL is always visible.
+        bar = "=" * (len(url) + 18)
+        print(bar)
+        print(f"  preview at:  {url}")
+        print(bar)
+        _open_browser(url)
+        try:
+            ans = input("[preview] Proceed with TTS + lipsync? [y/N] ").strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            print()
+            ans = ""
+        if ans in ("y", "yes"):
+            print(f"[preview] gate kept open at {url} for {_fmt_duration(ttl)} after confirm")
+            return True
+        # On abort: kill the child so we don't leave a server behind for an
+        # aborted render — the user explicitly bailed.
+        with contextlib.suppress(Exception):
+            proc.terminate()
+        print("[preview] aborted by user.", file=sys.stderr)
+        return False
+
+    # ttl == 0 → legacy behavior: in-process server, killed on input return.
+    return _prompt_user_legacy(out_dir, idx_path)
+
+
+def _prompt_user_legacy(out_dir: Path, idx_path: Path) -> bool:
+    """Original behavior: in-process server, torn down the instant input returns.
+
+    Used when `preview_ttl=0` (explicit opt-in to legacy) or when spawning the
+    detached child failed for some reason.
+    """
     port = _free_port()
     handler = functools.partial(_QuietHandler, directory=str(out_dir))
-
     with socketserver.TCPServer(("127.0.0.1", port), handler) as httpd:
         t = threading.Thread(target=httpd.serve_forever, daemon=True)
         t.start()
@@ -143,26 +317,13 @@ def prompt_user(out_dir: Path, slides: Iterable[dict], orientation: str, *, auto
         print(bar)
         # Give the server a tick to spin up before opening the browser.
         time.sleep(0.2)
-        opened = False
-        try:
-            opened = bool(webbrowser.open(url))
-        except Exception:  # noqa: BLE001
-            opened = False
-        if not opened and sys.platform == "darwin" and shutil.which("open"):
-            try:
-                subprocess.run(["open", url], check=False)
-                opened = True
-            except Exception:  # noqa: BLE001
-                pass
-        if not opened:
-            print("[preview] could not auto-open a browser; copy the URL above.")
+        _open_browser(url)
         try:
             ans = input("[preview] Proceed with TTS + lipsync? [y/N] ").strip().lower()
         except (KeyboardInterrupt, EOFError):
             print()
             ans = ""
         httpd.shutdown()
-
     if ans in ("y", "yes"):
         return True
     print("[preview] aborted by user.", file=sys.stderr)

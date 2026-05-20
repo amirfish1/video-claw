@@ -259,6 +259,18 @@ def _ensure_keys_for(project: cfg_mod.Project) -> Optional[str]:
     return None
 
 
+def _validate_preview_ttl(raw: Optional[int]) -> Optional[int]:
+    """Reject negative TTLs with a clear error. None means 'use default'."""
+    if raw is None:
+        return None
+    if raw < 0:
+        raise SystemExit(
+            f"error: --preview-ttl must be >= 0 (got {raw}); use 0 to disable, "
+            "positive for seconds."
+        )
+    return raw
+
+
 def cmd_render(args: argparse.Namespace) -> int:
     project = cfg_mod.load(Path(args.project_dir))
     err = _ensure_keys_for(project)
@@ -288,6 +300,7 @@ def cmd_render(args: argparse.Namespace) -> int:
             lipsync_cfg=project.config.get("lipsync"),
             auto_yes=args.yes,
             skip_preview=args.no_preview,
+            preview_ttl=_validate_preview_ttl(args.preview_ttl),
         )
     except SystemExit as e:
         print(f"[render] {e}", file=sys.stderr)
@@ -308,7 +321,11 @@ def cmd_preview(args: argparse.Namespace) -> int:
         dimensions=project.dimensions,
     )
     from . import preview as preview_mod
-    preview_mod.prompt_user(workdir, project.slides, project.orientation, auto_yes=False)
+    preview_mod.prompt_user(
+        workdir, project.slides, project.orientation,
+        auto_yes=False,
+        preview_ttl=_validate_preview_ttl(args.preview_ttl),
+    )
     return 0
 
 
@@ -352,10 +369,27 @@ def build_parser() -> argparse.ArgumentParser:
                     help="Skip the interactive preview gate.")
     pr.add_argument("--no-preview", action="store_true",
                     help="Render without opening the preview at all.")
+    pr.add_argument(
+        "--preview-ttl", type=int, default=None, metavar="SECONDS",
+        help=(
+            "Keep the preview server alive this many seconds after the gate "
+            "confirms (default: 3600 interactive / 60 headless). "
+            "0 disables (server dies on confirm). "
+            "Env: VIDEO_CLAW_PREVIEW_TTL."
+        ),
+    )
     pr.set_defaults(func=cmd_render)
 
     pp = sub.add_parser("preview", help="Render slide PNGs and open the preview gate only.")
     pp.add_argument("project_dir", nargs="?", default=".")
+    pp.add_argument(
+        "--preview-ttl", type=int, default=None, metavar="SECONDS",
+        help=(
+            "Keep the preview server alive this many seconds after the gate "
+            "confirms (default: 3600 interactive / 60 headless). "
+            "0 disables. Env: VIDEO_CLAW_PREVIEW_TTL."
+        ),
+    )
     pp.set_defaults(func=cmd_preview)
 
     return p
