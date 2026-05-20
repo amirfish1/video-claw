@@ -36,6 +36,14 @@ The skill triggers on natural-language prompts like "make a video about X",
 "turn this outline into a narrated walkthrough", "build a short for
 Shorts/TikTok/Reels". No slash command, no remembered syntax.
 
+## Demo
+
+<video src="https://raw.githubusercontent.com/amirfish1/video-claw/main/docs/demo.mp4"
+       controls muted playsinline
+       width="100%">
+  Your browser does not support the video tag.
+</video>
+
 ## What you get
 
 - **HTML slides.** Write them like web pages with full CSS. No bespoke DSL.
