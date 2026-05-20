@@ -75,27 +75,36 @@ require_pipx() {
 }
 
 # Returns 0 if at least one Chromium-class browser exists.
+# CHROME_BIN env var wins; otherwise we prefer stable Chrome over Beta/Dev/Canary,
+# and Chrome family over Brave/Edge. Keep this order in sync with
+# video_claw/renderer_html.py:_find_chrome_binary().
 check_chrome() {
-  # macOS app-bundle paths
+  if [ -n "${CHROME_BIN:-}" ] && [ -x "$CHROME_BIN" ]; then
+    return 0
+  fi
+  # macOS app-bundle paths (stable channel first, dev/beta after, alternates last).
   local mac_candidates=(
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta"
+    "/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev"
+    "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
     "/Applications/Chromium.app/Contents/MacOS/Chromium"
     "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    "/Applications/Brave Browser Beta.app/Contents/MacOS/Brave Browser Beta"
+    "/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly"
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
   )
   for p in "${mac_candidates[@]}"; do
     if [ -x "$p" ]; then
       return 0
     fi
   done
-  # PATH-based fallbacks
-  for cmd in google-chrome chromium chromium-browser brave-browser chrome; do
+  # PATH-based fallbacks (Linux + dev shells).
+  for cmd in google-chrome google-chrome-stable chromium chromium-browser brave-browser microsoft-edge chrome; do
     if command -v "$cmd" >/dev/null 2>&1; then
       return 0
     fi
   done
-  if [ -n "${CHROME_BIN:-}" ] && [ -x "$CHROME_BIN" ]; then
-    return 0
-  fi
   return 1
 }
 
@@ -114,7 +123,19 @@ require_chrome() {
 # ---------------------------------------------------------------------------
 
 do_install() {
-  note "installing video-claw via pipx (forced reinstall)..."
+  # We always pass --force for idempotency (re-running the installer should
+  # bring you up to head). Tone the user-facing message accordingly: if pipx
+  # has no existing video-claw venv, this is a fresh install, not a "forced
+  # reinstall"; if it does, frame it as a refresh rather than an override.
+  local existing=""
+  if command -v pipx >/dev/null 2>&1; then
+    existing="$(pipx list --short 2>/dev/null | awk '$1 == "video-claw" { print $1 }')"
+  fi
+  if [ -n "$existing" ]; then
+    note "found existing video-claw — refreshing to latest version..."
+  else
+    note "installing video-claw via pipx..."
+  fi
   pipx install --force "$PIPX_TARGET"
 }
 
@@ -205,7 +226,12 @@ EOF
 # ---------------------------------------------------------------------------
 
 main() {
-  note "channel: ${VIDEO_CLAW_FROM:-unknown}"
+  # `channel` is internal telemetry — only useful when an outer wrapper sets
+  # VIDEO_CLAW_FROM=readme / =skill / etc. so we can grep installs by source.
+  # Stay quiet for everyone else; "channel: unknown" alarmed users on 0.3.0.
+  if [ -n "${VIDEO_CLAW_FROM:-}" ]; then
+    note "channel: ${VIDEO_CLAW_FROM}"
+  fi
   require_python3
   require_pipx
   require_chrome

@@ -71,6 +71,49 @@ def load_keys() -> Dict[str, str]:
     return merged
 
 
+def key_provenance(name: str) -> Optional[Dict[str, str]]:
+    """Tell the user WHERE an existing key came from. Used by the wizard so users
+    aren't startled by a key value they don't recognize as their own.
+
+    Returns:
+        None if no value is configured at all, else a dict:
+          {"source": "env" | "file", "where": <human path or env var name>,
+           "value": <raw key>, "mtime": <YYYY-MM-DD or "">}
+    """
+    env_val = os.environ.get(name)
+    if env_val:
+        return {
+            "source": "env",
+            "where": f"${name} (environment variable)",
+            "value": env_val,
+            "mtime": "",
+        }
+    file_keys = _parse_env_file(KEYS_FILE)
+    if name in file_keys:
+        mtime = ""
+        try:
+            import datetime as _dt
+            ts = KEYS_FILE.stat().st_mtime
+            mtime = _dt.datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+        except OSError:
+            pass
+        # Use ~ in the path string so users recognize their home dir at a glance.
+        try:
+            home = str(Path.home())
+            path_str = str(KEYS_FILE)
+            if path_str.startswith(home):
+                path_str = "~" + path_str[len(home):]
+        except Exception:  # noqa: BLE001
+            path_str = str(KEYS_FILE)
+        return {
+            "source": "file",
+            "where": path_str,
+            "value": file_keys[name],
+            "mtime": mtime,
+        }
+    return None
+
+
 def get(name: str) -> Optional[str]:
     """Get a single key by full name or alias."""
     canonical = ALIASES.get(name.upper(), name)

@@ -1,16 +1,19 @@
-"""Text-to-speech: ElevenLabs (primary) + Deepgram (fallback).
+"""Text-to-speech providers: ElevenLabs (primary), Deepgram, macOS `say`.
 
-Both functions take `(text, idx, *, workdir, cache, tts_cfg)` and return
-`(m4a_path, duration_seconds)`. ElevenLabs additionally writes an alignment
-JSON sidecar (`narr_NN.alignment.json` in workdir) for caption timing.
+Each `make_audio_<provider>` takes `(text, idx, *, workdir, cache, tts_cfg)`
+and returns `(m4a_path, duration_seconds)`. ElevenLabs additionally writes
+an alignment JSON sidecar (`narr_NN.alignment.json` in workdir) for
+caption timing. Deepgram and macOS produce no word-level alignment;
+caption flow degrades to estimated timing.
 
-Caching is wired through `cache_or_run`:
-  - kind="tts" caches raw provider output (mp3 + optional alignment sidecar)
+Caching is wired through `cache.run`:
+  - kind="tts" caches raw provider output (mp3 / wav / optional alignment sidecar)
   - kind="m4a" caches the silenceremove+atempo m4a encode
 
 Voice defaults (DO NOT change without reading CLAUDE.md):
   ElevenLabs: cgSgspJ2msm6clMCkdW9  (Jessica)
   Deepgram:   aura-2-thalia-en
+  macOS say:  Samantha               (system voice, always installed)
 """
 from __future__ import annotations
 import base64
@@ -21,7 +24,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
-from . import keys
+from .. import keys
+from . import macos as _macos
 
 
 DEFAULT_TTS = {
@@ -30,6 +34,7 @@ DEFAULT_TTS = {
     "model": "eleven_turbo_v2_5",
     "speaking_rate": 1.0,
     "deepgram_voice": "aura-2-thalia-en",
+    "macos_voice": "Samantha",
 }
 
 
@@ -174,12 +179,47 @@ def make_audio_deepgram(text: str, idx: int, *, workdir: Path,
     return target_m4a, _ffprobe_duration(target_m4a)
 
 
+def make_audio_macos(text: str, idx: int, *, workdir: Path,
+                     cache, tts_cfg: Dict[str, Any]) -> Tuple[Path, float]:
+    """macOS `say` -> wav -> m4a. Free, offline, macOS-only. No alignment.
+
+    The heavy lifting lives in `video_claw.tts.macos.synthesize` so it can be
+    imported directly from tests / external code.
+    """
+    voice = tts_cfg.get("macos_voice", DEFAULT_TTS["macos_voice"])
+    rate = float(tts_cfg.get("speaking_rate", DEFAULT_TTS["speaking_rate"]))
+
+    def _generate(out_path: Path) -> None:
+        # synthesize writes a wav directly to out_path.
+        _macos.synthesize(text, out_path, voice=voice)
+
+    tts_key = [text, "macos", "voice", voice]
+    cached_wav = cache.run("tts", tts_key, "wav", _generate)
+    target_wav = workdir / f"narr_{idx:02d}.wav"
+    target_wav.write_bytes(cached_wav.read_bytes())
+
+    m4a_key = [cached_wav, "rate", round(rate, 4), "silenceremove", "0.25", "0.0", "macos"]
+
+    def _m4a_gen(out_path: Path) -> None:
+        _encode_to_m4a(target_wav, out_path, rate=rate)
+
+    cached_m4a = cache.run("m4a", m4a_key, "m4a", _m4a_gen)
+    target_m4a = workdir / f"narr_{idx:02d}.m4a"
+    target_m4a.write_bytes(cached_m4a.read_bytes())
+    return target_m4a, _ffprobe_duration(target_m4a)
+
+
 def make_audio(text: str, idx: int, *, workdir: Path, cache,
                tts_cfg: Dict[str, Any]) -> Tuple[Path, float]:
     """Dispatch to the configured provider. Falls back to ElevenLabs when unset."""
     provider = (tts_cfg.get("provider") or DEFAULT_TTS["provider"]).lower()
     if provider == "deepgram":
         return make_audio_deepgram(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
+    if provider in ("macos", "say", "macos-say"):
+        return make_audio_macos(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
     if provider in ("elevenlabs", "el", "eleven"):
         return make_audio_elevenlabs(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
-    raise ValueError(f"Unknown TTS provider: {provider!r}. Use 'elevenlabs' or 'deepgram'.")
+    raise ValueError(
+        f"Unknown TTS provider: {provider!r}. "
+        "Use 'elevenlabs', 'deepgram', or 'macos'."
+    )

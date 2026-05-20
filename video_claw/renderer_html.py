@@ -1,15 +1,17 @@
 """HTML -> PNG rendering via Chrome headless.
 
 We look for a usable Chromium-class binary in this order:
-  1. CHROME_BIN env var (explicit user override)
-  2. /Applications/Google Chrome.app/Contents/MacOS/Google Chrome  (macOS)
-  3. /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
-  4. /Applications/Chromium.app/Contents/MacOS/Chromium
-  5. /Applications/Brave Browser.app/Contents/MacOS/Brave Browser
-  6. `chromium` / `google-chrome` / `chrome` on PATH (Linux/dev)
-  7. The bundled Playwright Chromium under ~/Library/Caches/ms-playwright/
+  1. CHROME_BIN env var (explicit user override; highest precedence).
+  2. macOS app bundles, stable channel first, then Beta/Dev/Canary, then
+     Chromium / Brave (incl. Beta + Nightly) / Microsoft Edge.
+  3. `chromium` / `google-chrome` / `chrome` / `microsoft-edge` on PATH
+     (Linux + dev shells).
+  4. The bundled Playwright Chromium under ~/Library/Caches/ms-playwright/
      (only used if a session previously ran `playwright install chromium`;
       not required for normal use)
+
+The macOS candidate order is kept in sync with install.sh's check_chrome.
+If you add a browser here, mirror it in install.sh too.
 
 `render_html_to_png` writes one PNG per HTML file at the requested viewport.
 Playwright is not a Python dependency of this package; the renderer shells out
@@ -28,17 +30,26 @@ def _find_chrome_binary() -> Optional[str]:
     if explicit and Path(explicit).exists():
         return explicit
 
+    # Keep this list aligned with install.sh:check_chrome().
     candidates = [
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta",
+        "/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev",
+        "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
         "/Applications/Chromium.app/Contents/MacOS/Chromium",
         "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+        "/Applications/Brave Browser Beta.app/Contents/MacOS/Brave Browser Beta",
+        "/Applications/Brave Browser Nightly.app/Contents/MacOS/Brave Browser Nightly",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
     ]
     for c in candidates:
         if Path(c).exists():
             return c
 
-    for name in ("chromium", "google-chrome", "chrome", "google-chrome-stable"):
+    for name in (
+        "chromium", "google-chrome", "google-chrome-stable",
+        "chromium-browser", "brave-browser", "microsoft-edge", "chrome",
+    ):
         p = shutil.which(name)
         if p:
             return p

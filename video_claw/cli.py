@@ -255,9 +255,18 @@ def _ensure_keys_for(project: cfg_mod.Project) -> Optional[str]:
     needs_lipsync = any(s.get("lipsync") for s in project.slides)
 
     missing: List[str] = []
-    if tts_provider.startswith("eleven") and not os.environ.get("ELEVENLABS_API_KEY"):
+    # macOS `say` needs no API key — skip the EL/DG checks for that provider.
+    if tts_provider in ("macos", "say", "macos-say"):
+        # Validate platform early so users on Linux fail before TTS spend.
+        import platform
+        if platform.system() != "Darwin":
+            return (
+                "tts.provider='macos' selected but this is not macOS.\n"
+                "Use 'elevenlabs' or 'deepgram' on Linux."
+            )
+    elif tts_provider.startswith("eleven") and not os.environ.get("ELEVENLABS_API_KEY"):
         missing.append("ELEVENLABS_API_KEY (for ElevenLabs TTS)")
-    if tts_provider.startswith("deepgram") and not os.environ.get("DEEPGRAM_API_KEY"):
+    elif tts_provider.startswith("deepgram") and not os.environ.get("DEEPGRAM_API_KEY"):
         missing.append("DEEPGRAM_API_KEY (for Deepgram TTS)")
     if needs_lipsync and not os.environ.get("FAL_API_KEY"):
         missing.append("FAL_API_KEY (for fal.ai lipsync)")
