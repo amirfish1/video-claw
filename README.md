@@ -290,6 +290,25 @@ artifacts. Fix: flatten the avatar onto solid black before saving it to
 **Stale cache**. Set `FORCE_REGEN=1` in the environment to bypass every
 cache layer. Or `rm -rf video_build/`.
 
+## Claude Code skill
+
+video-claw also ships as a Claude Code skill. The package wheel bundles
+`SKILL.md` plus its references, and `video-claw install-skill` lays them
+down at `~/.claude/skills/video-claw/`. The `install.sh` one-liner offers
+to do this for you (default Yes) when it detects a `~/.claude/` directory;
+otherwise run it yourself once:
+
+```
+video-claw install-skill
+```
+
+After that any Claude Code session, in any directory, can drive video-claw
+on natural-language prompts. The trigger phrases are listed inside
+`SKILL.md` ("make me a video about X", "build a short for Reels", etc.).
+
+Niche audience — if you don't use Claude Code, ignore this section and use
+the manual CLI above.
+
 ## License
 
 MIT. See `LICENSE`.

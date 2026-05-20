@@ -129,6 +129,8 @@ def cmd_install_skill(args: argparse.Namespace) -> int:
 
     Idempotent: re-runs overwrite files we own. If the target directory exists
     and contains files NOT in the package manifest, refuses unless --force.
+    `--target` overrides the destination (used by tests and power users who
+    keep their skills in an alternate location).
     """
     source_root = importlib.resources.files("video_claw") / "skill_data" / SKILL_NAME
     if not source_root.is_dir():
@@ -140,7 +142,7 @@ def cmd_install_skill(args: argparse.Namespace) -> int:
         return 2
 
     owned = {str(p) for p in _iter_skill_files()}
-    target = SKILL_TARGET
+    target = Path(args.target).expanduser().resolve() if args.target else SKILL_TARGET
 
     if target.exists():
         existing = []
@@ -368,6 +370,13 @@ def build_parser() -> argparse.ArgumentParser:
     ps = sub.add_parser(
         "install-skill",
         help="Register the bundled Claude Code skill into ~/.claude/skills/.",
+    )
+    ps.add_argument(
+        "--target", default=None, metavar="PATH",
+        help=(
+            "Destination directory (default: ~/.claude/skills/video-claw). "
+            "Useful for testing or non-standard Claude Code setups."
+        ),
     )
     ps.add_argument(
         "--force", action="store_true",

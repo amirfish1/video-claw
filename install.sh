@@ -183,6 +183,53 @@ prompt_yes_no() {
   esac
 }
 
+# Same as prompt_yes_no but defaults to YES on empty input. Used for the skill
+# install prompt where we want the friction-free path to be "press enter".
+prompt_yes_no_default_yes() {
+  local question="$1"
+  if ! is_interactive; then
+    return 1
+  fi
+  local choice=""
+  if [ -t 0 ]; then
+    printf 'install: %s [Y/n] ' "$question"
+    read -r choice
+  else
+    printf 'install: %s [Y/n] ' "$question" > /dev/tty
+    read -r choice < /dev/tty
+  fi
+  case "$choice" in
+    ""|[yY]|[yY][eE][sS]) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Offer to drop the Claude Code skill into ~/.claude/skills/video-claw/.
+# Only meaningful for Claude Code users — we detect that by the presence of
+# ~/.claude/. Non-Claude-Code users see nothing, so the installer stays clean
+# for them. Non-interactive runs print a single hint and exit.
+maybe_install_skill() {
+  local claude_dir="${HOME}/.claude"
+  if [ ! -d "$claude_dir" ]; then
+    # User isn't running Claude Code. Stay silent — no prompt, no hint.
+    return 0
+  fi
+
+  if ! is_interactive; then
+    note "[skill] Claude Code skill not installed (run \`video-claw install-skill\` to enable)."
+    return 0
+  fi
+
+  if prompt_yes_no_default_yes "install Claude Code skill at ~/.claude/skills/video-claw?"; then
+    video-claw install-skill || {
+      err "video-claw install-skill failed; you can re-run it manually later."
+      return 0
+    }
+  else
+    note "Run \`video-claw install-skill\` later to enable the Claude Code workflow."
+  fi
+}
+
 run_setup_wizard() {
   if ! is_interactive; then
     note "non-interactive shell detected; skipping the key wizard."
@@ -245,6 +292,7 @@ main() {
     exit 1
   fi
 
+  maybe_install_skill
   run_setup_wizard
   success_banner
 }
