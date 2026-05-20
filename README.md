@@ -12,9 +12,16 @@ Built for macOS. Works on Linux.
 ## Quickstart
 
 ```
-# 1. One-time install
+# One command: install, then walk you through API key setup.
+curl -fsSL https://raw.githubusercontent.com/amirfish1/video-claw/main/install.sh | bash
+```
+
+Or the manual two-step:
+
+```
 pipx install git+https://github.com/amirfish1/video-claw
-video-claw install-skill
+video-claw setup            # interactive key wizard with cost notes
+video-claw install-skill    # optional: register the Claude Code skill
 ```
 
 Then open Claude Code in any directory and say:

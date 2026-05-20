@@ -3,6 +3,9 @@
 Subcommands:
   init           Scaffold a new project in the current (or given) directory.
   install-skill  Register the bundled Claude Code skill into ~/.claude/skills/.
+  setup          Interactive wizard: prompts for API keys, explains cost.
+                   setup           Interactive; reads from /dev/tty if needed.
+                   setup --check   Non-interactive status. Used by install.sh.
   keys           Manage API keys at ~/.config/video-claw/keys.env.
                    keys list                 Show which keys are set (masked).
                    keys set NAME=value ...   Save one or more keys.
@@ -32,6 +35,7 @@ from . import __version__
 from . import config as cfg_mod
 from . import core
 from . import keys as keys_mod
+from . import setup_wizard
 
 
 SKILL_NAME = "video-claw"
@@ -165,6 +169,12 @@ def cmd_install_skill(args: argparse.Namespace) -> int:
     print(f"  files:     {len(owned)}")
     print(f"  Claude Code will pick up the skill next time you start a session.")
     return 0
+
+
+def cmd_setup(args: argparse.Namespace) -> int:
+    if args.check:
+        return setup_wizard.run_check()
+    return setup_wizard.run_wizard()
 
 
 def cmd_keys(args: argparse.Namespace) -> int:
@@ -355,6 +365,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Overwrite the target dir even if it contains foreign files.",
     )
     ps.set_defaults(func=cmd_install_skill)
+
+    pst = sub.add_parser(
+        "setup",
+        help="Interactive key wizard with per-provider cost notes.",
+    )
+    pst.add_argument(
+        "--check", action="store_true",
+        help="Non-interactive status only; print key health and exit.",
+    )
+    pst.set_defaults(func=cmd_setup)
 
     pk = sub.add_parser("keys", help="Manage API keys.")
     pk.add_argument("action", choices=["list", "set", "test", "path"])
