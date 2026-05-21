@@ -38,11 +38,9 @@ Shorts/TikTok/Reels". No slash command, no remembered syntax.
 
 ## Demo
 
-<video src="https://raw.githubusercontent.com/amirfish1/video-claw/main/docs/demo.mp4"
-       controls muted playsinline
-       width="100%">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/180d77f3-e847-4e39-901c-bddccbed25ad
+
+<sub>(also at <a href="https://raw.githubusercontent.com/amirfish1/video-claw/main/docs/demo.mp4"><code>docs/demo.mp4</code></a> in the repo)</sub>
 
 ## What you get
 
