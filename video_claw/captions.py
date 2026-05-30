@@ -38,6 +38,27 @@ def fmt_ass_time(seconds: float) -> str:
     return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
 
 
+def _group_into_chunks(
+    words: List[Tuple[float, float, str]]
+) -> List[List[Tuple[float, float, str]]]:
+    """Group timed words into ~7-word caption chunks, breaking on punctuation
+    at >=6 words and hard-breaking at >=9 words."""
+    chunks: List[List[Tuple[float, float, str]]] = []
+    chunk: List[Tuple[float, float, str]] = []
+    for w in words:
+        chunk.append(w)
+        last_text = w[2]
+        if len(chunk) >= 6 and (last_text.endswith(",") or last_text.endswith(".")):
+            chunks.append(chunk)
+            chunk = []
+        elif len(chunk) >= 9:
+            chunks.append(chunk)
+            chunk = []
+    if chunk:
+        chunks.append(chunk)
+    return chunks
+
+
 def build_srt_for_slide(idx: int, offset_s: float, rate: float,
                         workdir: Path) -> List[Entry]:
     """Read `narr_NN.alignment.json` from workdir; return caption chunks already
@@ -75,19 +96,7 @@ def build_srt_for_slide(idx: int, offset_s: float, rate: float,
         words.append((cur_start / r, ends[-1] / r, cur_word))
 
     # Group into chunks of ~7 words, breaking on punctuation if possible.
-    chunks: List[List[Tuple[float, float, str]]] = []
-    chunk: List[Tuple[float, float, str]] = []
-    for w in words:
-        chunk.append(w)
-        last_text = w[2]
-        if len(chunk) >= 6 and (last_text.endswith(",") or last_text.endswith(".")):
-            chunks.append(chunk)
-            chunk = []
-        elif len(chunk) >= 9:
-            chunks.append(chunk)
-            chunk = []
-    if chunk:
-        chunks.append(chunk)
+    chunks = _group_into_chunks(words)
 
     entries: List[Entry] = []
     for c in chunks:
@@ -95,6 +104,38 @@ def build_srt_for_slide(idx: int, offset_s: float, rate: float,
         end = c[-1][1] + offset_s
         text = " ".join(w[2] for w in c).strip()
         entries.append((start, end, text))
+    return entries
+
+
+def build_estimated_srt_for_slide(text: str, offset_s: float,
+                                  duration: float) -> List[Entry]:
+    """Caption chunks with timing ESTIMATED from text + measured audio duration.
+
+    Used when the TTS provider emits no word-level alignment (macOS `say`,
+    Deepgram). Each word's share of `duration` is proportional to its character
+    length, so longer words occupy proportionally more time. `duration` is the
+    measured, post-atempo audio length, so no speaking-rate division is needed.
+    Returns entries already offset by `offset_s`.
+    """
+    raw_words = text.split()
+    if not raw_words or duration <= 0:
+        return []
+
+    weights = [max(len(w), 1) for w in raw_words]
+    total = sum(weights)
+    words: List[Tuple[float, float, str]] = []
+    t = 0.0
+    for w, wt in zip(raw_words, weights):
+        share = duration * (wt / total)
+        words.append((t, t + share, w))
+        t += share
+
+    entries: List[Entry] = []
+    for c in _group_into_chunks(words):
+        start = c[0][0] + offset_s
+        end = c[-1][1] + offset_s
+        chunk_text = " ".join(w[2] for w in c).strip()
+        entries.append((start, end, chunk_text))
     return entries
 
 
