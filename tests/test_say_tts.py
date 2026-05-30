@@ -123,3 +123,47 @@ def test_resolve_voice_falls_back_to_samantha(monkeypatch, capsys):
     monkeypatch.setattr(macos, "_list_installed_voices", lambda b: ["Samantha"])
     assert macos._resolve_voice("Zoe (Premium)", "say") == "Samantha"
     assert "Falling back to Samantha" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# Best-voice auto-detection (Premium > Enhanced > basic, English only).
+# ---------------------------------------------------------------------------
+
+def test_voice_records_capture_locale_and_name(monkeypatch):
+    from video_claw.tts import macos
+    import subprocess as sp
+    sample = (
+        "Samantha            en_US    # Hi\n"
+        "Zoe (Premium)       en_US    # Hi\n"
+        "Daniel (Enhanced)   en_GB    # Hi\n"
+        "Amelie              fr_CA    # Bonjour\n"
+    )
+
+    class _R:
+        stdout = sample
+
+    monkeypatch.setattr(sp, "run", lambda *a, **k: _R())
+    recs = macos._installed_voice_records("say")
+    assert ("Zoe (Premium)", "en_US") in recs
+    assert ("Daniel (Enhanced)", "en_GB") in recs
+    assert ("Amelie", "fr_CA") in recs
+
+
+def test_best_voice_prefers_premium_english(monkeypatch):
+    from video_claw.tts import macos
+    monkeypatch.setattr(macos, "_installed_voice_records", lambda b: [
+        ("Samantha", "en_US"),
+        ("Daniel (Enhanced)", "en_GB"),
+        ("Zoe (Premium)", "en_US"),
+        ("Amelie (Premium)", "fr_CA"),  # non-English, must be ignored
+    ])
+    assert macos._best_installed_voice("say") == "Zoe (Premium)"
+
+
+def test_best_voice_basic_only_falls_back_to_samantha(monkeypatch, capsys):
+    from video_claw.tts import macos
+    macos._warned_basic_only = False
+    monkeypatch.setattr(macos, "_installed_voice_records", lambda b: [
+        ("Alex", "en_US"), ("Samantha", "en_US")])
+    assert macos._best_installed_voice("say") == "Samantha"
+    assert "Premium voice" in capsys.readouterr().out
