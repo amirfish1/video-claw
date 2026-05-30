@@ -21,6 +21,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from . import avatar as avatar_mod
 from . import cache as cache_mod
 from . import captions as caps_mod
 from . import ffmpeg_video as ff
@@ -171,6 +172,20 @@ def _video_backdrop_html(w: int, h: int, title: str, vp) -> str:
 """
 
 
+def _select_avatar_badge(badge: Optional[Path], scope: str, idx: int,
+                         slide: Dict[str, Any]) -> Optional[Path]:
+    """Decide whether `badge` shows on this slide given the configured scope."""
+    if badge is None:
+        return None
+    if scope == "all":
+        return badge
+    if scope == "intro" and idx == 0:
+        return badge
+    if scope == "flagged" and slide.get("avatar"):
+        return badge
+    return None
+
+
 def make_video(slides: List[Dict[str, Any]], *,
                workdir: Path,
                orientation: str = "horizontal",
@@ -178,6 +193,8 @@ def make_video(slides: List[Dict[str, Any]], *,
                out_path: Optional[Path] = None,
                tts_cfg: Optional[Dict[str, Any]] = None,
                lipsync_cfg: Optional[Dict[str, Any]] = None,
+               avatar_cfg: Optional[Dict[str, Any]] = None,
+               captions_cfg: Optional[Dict[str, Any]] = None,
                auto_yes: bool = False,
                skip_preview: bool = False,
                preview_ttl: Optional[int] = None) -> Path:
@@ -189,6 +206,8 @@ def make_video(slides: List[Dict[str, Any]], *,
     dimensions = _dims(orientation)
     tts_cfg = {**DEFAULT_TTS, **(tts_cfg or {})}
     lipsync_cfg = {**DEFAULT_LIPSYNC, **(lipsync_cfg or {})}
+    avatar_cfg = avatar_cfg or {}
+    captions_cfg = captions_cfg or {}
     if out_path is None:
         out_path = workdir / "video.mp4"
     out_path = Path(out_path).resolve()
@@ -211,7 +230,21 @@ def make_video(slides: List[Dict[str, Any]], *,
         if not ok:
             raise SystemExit("aborted at preview gate")
 
-    # Phase 3: TTS (cached), optional lipsync (cached), per-slide MP4 stitching.
+    # Phase 3: TTS (cached), optional lipsync/avatar (cached), per-slide MP4 stitching.
+    if (tts_cfg.get("provider") or "").lower() in ("macos", "say", "macos-say") \
+            and not any(s.get("lipsync") for s in slides):
+        print("[boot] $0 mode: local macOS TTS, no paid APIs")
+
+    avatar_badge: Optional[Path] = None
+    if avatar_cfg.get("static"):
+        try:
+            img = avatar_mod.resolve_avatar_image(avatar_cfg, project_dir)
+            avatar_badge = avatar_mod.crop_image_to_circle(
+                img, cache=cache, diameter=int(avatar_cfg.get("diameter", 280)))
+            print(f"  [avatar] static badge: {img.name}")
+        except Exception as e:  # noqa: BLE001
+            print(f"  [avatar] static badge failed: {e}; continuing without it")
+
     parts: List[Path] = []
     all_captions: List[Tuple[float, float, str]] = []
     cumulative = 0.0
@@ -225,9 +258,14 @@ def make_video(slides: List[Dict[str, Any]], *,
         print(f"  slide {idx + 1}/{len(slides)}: TTS ({slide_tts['provider']}){rate_tag}")
         m4a, dur = tts_mod.make_audio(narration, idx, workdir=workdir, cache=cache, tts_cfg=slide_tts)
 
-        # Caption alignment is only produced by ElevenLabs.
-        if slide_tts["provider"].lower().startswith("eleven"):
+        # ElevenLabs gives word-perfect alignment; otherwise estimate from the
+        # measured audio duration when caption estimation is enabled.
+        align_path = workdir / f"narr_{idx:02d}.alignment.json"
+        if slide_tts["provider"].lower().startswith("eleven") and align_path.exists():
             all_captions.extend(caps_mod.build_srt_for_slide(idx, cumulative, rate, workdir))
+        elif captions_cfg.get("estimate"):
+            all_captions.extend(
+                caps_mod.build_estimated_srt_for_slide(narration, cumulative, dur))
 
         # Optional fal lipsync overlay.
         lipsync_circle = None
@@ -256,11 +294,14 @@ def make_video(slides: List[Dict[str, Any]], *,
                 except Exception as e:  # noqa: BLE001
                     print(f"  [lipsync] failed: {e}; continuing without overlay")
 
+        slide_avatar = _select_avatar_badge(
+            avatar_badge, avatar_cfg.get("scope", "all"), idx, slide)
         png = workdir / f"slide_{idx:02d}.png"
         mp4 = ff.make_slide_video(
             png, m4a, dur, idx,
             slide=slide, workdir=workdir, cache=cache,
             dimensions=dimensions, lipsync_circle=lipsync_circle,
+            avatar_circle=slide_avatar,
         )
         parts.append(mp4)
         cumulative += dur + 0.15

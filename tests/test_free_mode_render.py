@@ -14,3 +14,25 @@ def test_static_avatar_overlay_cmd_loops_still_image():
     assert cmd.count("-loop") == 2
     assert "overlay=x=100:y=200" in joined
     assert str(Path("badge.png")) in cmd
+
+
+def test_select_avatar_scope_all():
+    from video_claw.core import _select_avatar_badge
+    assert _select_avatar_badge("BADGE", "all", 3, {}) == "BADGE"
+
+
+def test_select_avatar_scope_intro_only_first():
+    from video_claw.core import _select_avatar_badge
+    assert _select_avatar_badge("BADGE", "intro", 0, {}) == "BADGE"
+    assert _select_avatar_badge("BADGE", "intro", 1, {}) is None
+
+
+def test_select_avatar_scope_flagged():
+    from video_claw.core import _select_avatar_badge
+    assert _select_avatar_badge("BADGE", "flagged", 2, {"avatar": True}) == "BADGE"
+    assert _select_avatar_badge("BADGE", "flagged", 2, {}) is None
+
+
+def test_select_avatar_no_badge():
+    from video_claw.core import _select_avatar_badge
+    assert _select_avatar_badge(None, "all", 0, {}) is None
