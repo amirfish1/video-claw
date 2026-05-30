@@ -36,3 +36,13 @@ def test_select_avatar_scope_flagged():
 def test_select_avatar_no_badge():
     from video_claw.core import _select_avatar_badge
     assert _select_avatar_badge(None, "all", 0, {}) is None
+
+
+def test_prompt_user_prints_cost_note(tmp_path, capsys):
+    from video_claw.preview import prompt_user
+    out = tmp_path / "out"; out.mkdir()
+    slides = [{"type": "html", "html": "a.html", "narration": "hi"}]
+    ok = prompt_user(out, slides, "horizontal", auto_yes=True,
+                     preview_ttl=0, cost_note="$0 — local TTS, no paid APIs")
+    assert ok is True
+    assert "$0 — local TTS, no paid APIs" in capsys.readouterr().out

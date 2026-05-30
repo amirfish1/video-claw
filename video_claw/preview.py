@@ -236,6 +236,7 @@ def prompt_user(
     orientation: str,
     *,
     auto_yes: bool = False,
+    cost_note: Optional[str] = None,
     preview_ttl: Optional[int] = None,
 ) -> bool:
     """Open the preview, wait on stdin, return True if the user typed 'y' or 'yes'.
@@ -248,6 +249,8 @@ def prompt_user(
     slides = list(slides)
     idx_path = _build_index(out_dir, slides, orientation)
     ttl = resolve_ttl(preview_ttl)
+    if cost_note:
+        print(f"[preview] {cost_note}")
 
     if auto_yes:
         # Still honor the TTL: spin up a detached server so the URL works

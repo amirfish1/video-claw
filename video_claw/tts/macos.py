@@ -84,8 +84,8 @@ def _resolve_voice(requested: str, say_bin: str) -> str:
     for v in installed:           # exact (case-insensitive) wins
         if v.lower() == req:
             return v
-    for v in installed:           # then substring either direction: "Zoe" -> "Zoe (Premium)"
-        if req in v.lower() or v.lower() in req:
+    for v in installed:           # then forward substring: "Zoe" -> "Zoe (Premium)"
+        if req in v.lower():
             return v
     print(
         f'  [macos-tts] voice "{requested}" not installed; download it in '

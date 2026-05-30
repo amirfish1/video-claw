@@ -195,6 +195,7 @@ def make_video(slides: List[Dict[str, Any]], *,
                lipsync_cfg: Optional[Dict[str, Any]] = None,
                avatar_cfg: Optional[Dict[str, Any]] = None,
                captions_cfg: Optional[Dict[str, Any]] = None,
+               free: bool = False,
                auto_yes: bool = False,
                skip_preview: bool = False,
                preview_ttl: Optional[int] = None) -> Path:
@@ -226,13 +227,13 @@ def make_video(slides: List[Dict[str, Any]], *,
             workdir, slides, orientation,
             auto_yes=auto_yes,
             preview_ttl=preview_ttl,
+            cost_note="$0 — local TTS, no paid APIs" if free else None,
         )
         if not ok:
             raise SystemExit("aborted at preview gate")
 
     # Phase 3: TTS (cached), optional lipsync/avatar (cached), per-slide MP4 stitching.
-    if (tts_cfg.get("provider") or "").lower() in ("macos", "say", "macos-say") \
-            and not any(s.get("lipsync") for s in slides):
+    if free:
         print("[boot] $0 mode: local macOS TTS, no paid APIs")
 
     avatar_badge: Optional[Path] = None
