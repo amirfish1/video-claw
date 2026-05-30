@@ -24,3 +24,6 @@ keys.env
 .env.local
 
 .DS_Store
+
+# Review Room film working media (not source)
+review-room/
