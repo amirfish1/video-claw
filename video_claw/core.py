@@ -32,11 +32,12 @@ from . import tts as tts_mod
 
 
 DEFAULT_TTS = {
-    "provider": "elevenlabs",
+    "provider": "auto",
     "voice_id": "cgSgspJ2msm6clMCkdW9",  # Jessica
     "model": "eleven_turbo_v2_5",
     "speaking_rate": 1.0,
     "deepgram_voice": "aura-2-thalia-en",
+    "macos_voice": "auto",
 }
 
 DEFAULT_LIPSYNC = {
@@ -186,6 +187,24 @@ def _select_avatar_badge(badge: Optional[Path], scope: str, idx: int,
     return None
 
 
+def _captions_for_slide(provider: str, workdir: Path, idx: int, narration: str,
+                        *, offset_s: float, dur: float, rate: float,
+                        estimate: bool) -> List[Tuple[float, float, str]]:
+    """Word-aligned captions for ElevenLabs (when its alignment sidecar exists),
+    otherwise estimated captions when `estimate` is on, else none.
+
+    The `provider.startswith("eleven") and alignment-exists` guard keeps a stale
+    alignment file from a prior ElevenLabs run from hijacking a later macOS/auto
+    render in the same workdir.
+    """
+    align_path = workdir / f"narr_{idx:02d}.alignment.json"
+    if provider.startswith("eleven") and align_path.exists():
+        return caps_mod.build_srt_for_slide(idx, offset_s, rate, workdir)
+    if estimate:
+        return caps_mod.build_estimated_srt_for_slide(narration, offset_s, dur)
+    return []
+
+
 def make_video(slides: List[Dict[str, Any]], *,
                workdir: Path,
                orientation: str = "horizontal",
@@ -236,6 +255,10 @@ def make_video(slides: List[Dict[str, Any]], *,
     if free:
         print("[boot] $0 mode: local macOS TTS, no paid APIs")
 
+    resolved_provider = tts_mod.resolve_provider(tts_cfg)
+    if (tts_cfg.get("provider") or "auto").lower() == "auto":
+        print(f"[tts] auto → {resolved_provider} (selected from available keys)")
+
     avatar_badge: Optional[Path] = None
     if avatar_cfg.get("static"):
         try:
@@ -254,19 +277,16 @@ def make_video(slides: List[Dict[str, Any]], *,
         if not narration.strip():
             raise ValueError(f"slide {idx}: missing narration text")
         rate = float(slide.get("speed") or tts_cfg.get("speaking_rate", 1.0))
-        slide_tts = {**tts_cfg, "speaking_rate": rate}
+        slide_tts = {**tts_cfg, "provider": resolved_provider, "speaking_rate": rate}
         rate_tag = f" speed={rate}x" if abs(rate - 1.0) > 1e-3 else ""
         print(f"  slide {idx + 1}/{len(slides)}: TTS ({slide_tts['provider']}){rate_tag}")
         m4a, dur = tts_mod.make_audio(narration, idx, workdir=workdir, cache=cache, tts_cfg=slide_tts)
 
-        # ElevenLabs gives word-perfect alignment; otherwise estimate from the
-        # measured audio duration when caption estimation is enabled.
-        align_path = workdir / f"narr_{idx:02d}.alignment.json"
-        if slide_tts["provider"].lower().startswith("eleven") and align_path.exists():
-            all_captions.extend(caps_mod.build_srt_for_slide(idx, cumulative, rate, workdir))
-        elif captions_cfg.get("estimate"):
-            all_captions.extend(
-                caps_mod.build_estimated_srt_for_slide(narration, cumulative, dur))
+        # Always caption: word-aligned for ElevenLabs, estimated otherwise.
+        all_captions.extend(_captions_for_slide(
+            resolved_provider, workdir, idx, narration,
+            offset_s=cumulative, dur=dur, rate=rate,
+            estimate=captions_cfg.get("estimate", True)))
 
         # Optional fal lipsync overlay.
         lipsync_circle = None
