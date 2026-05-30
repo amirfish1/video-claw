@@ -52,7 +52,20 @@ VO_LINES = [
 ]
 
 
+def _ffmpeg_bin():
+    try:
+        import imageio_ffmpeg  # type: ignore
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError:
+        return "ffmpeg"
+
+
+FFMPEG = _ffmpeg_bin()
+
+
 def run(cmd):
+    if cmd and cmd[0] == "ffmpeg":
+        cmd = [FFMPEG, *cmd[1:]]
     print("+", " ".join(str(c) for c in cmd))
     subprocess.run(cmd, check=True)
 
