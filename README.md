@@ -49,10 +49,9 @@ https://github.com/user-attachments/assets/180d77f3-e847-4e39-901c-bddccbed25ad
   `short` (1080x1920) for Shorts, TikTok, Reels.
 - **Two TTS providers.** ElevenLabs (default, with timestamps for captions)
   or Deepgram (cheaper, no captions).
-- **Free / $0 mode.** Set `CONFIG["mode"] = "free"` for a no-cost render:
-  local macOS `say` voice (e.g. Zoe Premium), a static Becky avatar badge on
-  every slide, and free estimated-timing captions — zero paid API calls.
-  macOS only.
+- **Free / $0 mode.** Set `CONFIG["mode"] = "free"` — local macOS voice,
+  static Becky avatar, free captions, zero paid API calls (macOS only).
+  See [Free / $0 mode](#free--0-mode).
 - **Optional lipsync.** Set `lipsync: True` on any slide; fal.ai overlays a
   circular AI presenter in the bottom-right.
 - **Word-aligned captions.** Burned in via libass when available, otherwise
@@ -64,6 +63,44 @@ https://github.com/user-attachments/assets/180d77f3-e847-4e39-901c-bddccbed25ad
   bundled skill into `~/.claude/skills/video-claw/`. Any Claude Code
   session, in any directory, can drive video-claw on natural-language
   prompts after that.
+
+## Free / $0 mode
+
+Don't want to spend a cent? Set one key in your project's `CONFIG`:
+
+```python
+CONFIG = {
+    # ...
+    "mode": "free",
+}
+```
+
+That's the whole switch. It **forces** a zero-cost render and overrides
+anything in the project that would otherwise spend money:
+
+- **macOS `say` narration** — defaults to the `Zoe (Premium)` voice. Premium
+  voices download once via System Settings → Accessibility → Spoken Content →
+  System Voice → Manage Voices. If Zoe isn't installed, free mode falls back to
+  the always-present `Samantha` (and prints a hint). Override with
+  `tts: {"macos_voice": "Samantha"}`.
+- **No lip-sync** — any slide `lipsync: True` is ignored; fal.ai is never called.
+- **Static presenter** — a circular avatar badge on every slide (bundled Becky,
+  or your own via `avatar: {"image": "assets/you.png"}`), bottom-right.
+- **Free captions** — estimated word timing, burned in locally with libass.
+
+macOS only — it needs Apple's `say`. On Linux, use ElevenLabs/Deepgram.
+
+**Or just ask Claude.** Say *"make me a free video about X"* (or "$0", "no
+budget") and the skill sets `mode: "free"` for you — no file editing. You'll
+know it's active when the render prints
+`[boot] $0 mode: local macOS TTS, no paid APIs`.
+
+Here's a free-mode render — Zoe voice, Becky badge, estimated captions,
+rendered with no API keys:
+
+https://github.com/user-attachments/assets/f0f2a0b6-debb-46a8-8010-bd74d10eab52
+
+<sub>(also at <a href="https://raw.githubusercontent.com/amirfish1/video-claw/main/docs/free-mode-demo.mp4"><code>docs/free-mode-demo.mp4</code></a> in the repo)</sub>
 
 ## Install
 
