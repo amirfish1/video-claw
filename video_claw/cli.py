@@ -35,6 +35,7 @@ from . import __version__
 from . import config as cfg_mod
 from . import core
 from . import keys as keys_mod
+from . import tts as tts_mod
 from . import setup_wizard
 
 
@@ -244,39 +245,41 @@ def cmd_keys(args: argparse.Namespace) -> int:
 
 
 def _ensure_keys_for(project: cfg_mod.Project) -> Optional[str]:
-    """Promote configured keys into os.environ before the engine runs.
+    """Promote configured keys into os.environ, resolve the effective TTS
+    provider, and fail fast only when there is genuinely no usable TTS path.
 
-    Returns an error string if a required key is missing, else None.
+    Progressive enhancement: `provider:"auto"` degrades to macOS local TTS when
+    no paid key is present, so a keyless render is allowed (on a Mac). A pinned
+    paid provider with no key, or `auto` on Linux with no key, is a hard error.
+    Lipsync without a FAL key is a warning, not a blocker — it degrades
+    gracefully at render time.
+
+    Returns an error string if there is no usable TTS path, else None.
     """
     import os
+    import platform
     all_keys = keys_mod.load_keys()
     for name, val in all_keys.items():
         os.environ.setdefault(name, val)
 
-    tts_provider = project.config.get("tts", {}).get("provider", "elevenlabs").lower()
-    needs_lipsync = any(s.get("lipsync") for s in project.slides)
+    try:
+        provider = tts_mod.resolve_provider(project.config.get("tts", {}))
+    except RuntimeError as e:
+        return str(e)
 
-    missing: List[str] = []
-    # macOS `say` needs no API key — skip the EL/DG checks for that provider.
-    if tts_provider in ("macos", "say", "macos-say"):
-        # Validate platform early so users on Linux fail before TTS spend.
-        import platform
-        if platform.system() != "Darwin":
-            return (
-                "tts.provider='macos' selected but this is not macOS.\n"
-                "Use 'elevenlabs' or 'deepgram' on Linux."
-            )
-    elif tts_provider.startswith("eleven") and not os.environ.get("ELEVENLABS_API_KEY"):
-        missing.append("ELEVENLABS_API_KEY (for ElevenLabs TTS)")
-    elif tts_provider.startswith("deepgram") and not os.environ.get("DEEPGRAM_API_KEY"):
-        missing.append("DEEPGRAM_API_KEY (for Deepgram TTS)")
-    if needs_lipsync and not os.environ.get("FAL_API_KEY"):
-        missing.append("FAL_API_KEY (for fal.ai lipsync)")
-    if missing:
-        return (
-            "Missing API keys:\n  - " + "\n  - ".join(missing)
-            + "\nSet via: video-claw keys set EL=sk_... FAL=..."
-        )
+    if provider.startswith("eleven") and not os.environ.get("ELEVENLABS_API_KEY"):
+        return ("Missing ELEVENLABS_API_KEY (for ElevenLabs TTS).\n"
+                "Set via: video-claw keys set EL=sk_..., or use provider 'auto'/'macos'.")
+    if provider.startswith("deepgram") and not os.environ.get("DEEPGRAM_API_KEY"):
+        return ("Missing DEEPGRAM_API_KEY (for Deepgram TTS).\n"
+                "Set via: video-claw keys set DG=..., or use provider 'auto'/'macos'.")
+    if provider in ("macos", "say", "macos-say") and platform.system() != "Darwin":
+        return ("macOS local TTS selected but this is not macOS.\n"
+                "Use 'elevenlabs' or 'deepgram' on Linux.")
+
+    if any(s.get("lipsync") for s in project.slides) and not os.environ.get("FAL_API_KEY"):
+        print("  [keys] FAL_API_KEY not set; lipsync slides will render without "
+              "the avatar overlay.")
     return None
 
 

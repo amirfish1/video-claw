@@ -188,8 +188,10 @@ CONFIG = {
     # "mode": "free",  # $0 render: macOS `say` voice, static Becky avatar on
     #                  # every slide, free estimated captions, no paid APIs.
     "tts": {
-        "provider": "elevenlabs",
-        "voice_id": "cgSgspJ2msm6clMCkdW9",  # ElevenLabs Jessica
+        # "auto" uses ElevenLabs if you have a key, else Deepgram, else free
+        # macOS local TTS — so this renders with no keys at all on a Mac.
+        "provider": "auto",
+        "voice_id": "cgSgspJ2msm6clMCkdW9",  # ElevenLabs Jessica (used only if auto picks EL)
         "model": "eleven_turbo_v2_5",
         "speaking_rate": 1.0,
     },
