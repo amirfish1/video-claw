@@ -319,6 +319,8 @@ def cmd_render(args: argparse.Namespace) -> int:
             out_path=out_path,
             tts_cfg=project.config.get("tts"),
             lipsync_cfg=project.config.get("lipsync"),
+            avatar_cfg=project.config.get("avatar"),
+            captions_cfg=project.config.get("captions"),
             auto_yes=args.yes,
             skip_preview=args.no_preview,
             preview_ttl=_validate_preview_ttl(args.preview_ttl),
