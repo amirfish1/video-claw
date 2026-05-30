@@ -49,6 +49,52 @@ def _require_binary(name: str) -> str:
     return p
 
 
+def _list_installed_voices(say_bin: str) -> list[str]:
+    """Installed voice names from `say -v ?`.
+
+    Each line looks like `Zoe (Premium)      en_US    # sample text`. The voice
+    name can contain spaces and parentheses; the locale token (e.g. `en_US`) is
+    the first short token containing `_`. Everything before it is the name.
+    """
+    res = subprocess.run([say_bin, "-v", "?"], capture_output=True, text=True)
+    voices: list[str] = []
+    for line in res.stdout.splitlines():
+        parts = line.split()
+        if not parts:
+            continue
+        name_tokens: list[str] = []
+        for tok in parts:
+            if "_" in tok and len(tok) <= 6:
+                break
+            name_tokens.append(tok)
+        if name_tokens:
+            voices.append(" ".join(name_tokens))
+    return voices
+
+
+def _resolve_voice(requested: str, say_bin: str) -> str:
+    """Resolve `requested` to an installed voice (case-insensitive, substring).
+
+    Premium voices like "Zoe (Premium)" must be downloaded by the user. If the
+    requested voice isn't installed, fall back to the always-present default
+    with a printed hint rather than letting `say` fail.
+    """
+    installed = _list_installed_voices(say_bin)
+    req = requested.lower()
+    for v in installed:           # exact (case-insensitive) wins
+        if v.lower() == req:
+            return v
+    for v in installed:           # then substring either direction: "Zoe" -> "Zoe (Premium)"
+        if req in v.lower() or v.lower() in req:
+            return v
+    print(
+        f'  [macos-tts] voice "{requested}" not installed; download it in '
+        f'System Settings > Accessibility > Spoken Content. '
+        f'Falling back to {DEFAULT_VOICE}.'
+    )
+    return DEFAULT_VOICE
+
+
 def synthesize(text: str, out_path: Path, *, voice: str = DEFAULT_VOICE) -> Path:
     """Speak `text` with the macOS `say` command and write 16-bit PCM wav to `out_path`.
 
@@ -63,6 +109,7 @@ def synthesize(text: str, out_path: Path, *, voice: str = DEFAULT_VOICE) -> Path
     """
     _require_macos()
     say = _require_binary("say")
+    voice = _resolve_voice(voice, say)
     out_path = Path(out_path).resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
 

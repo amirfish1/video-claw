@@ -91,3 +91,35 @@ def test_dispatch_via_make_audio(tmp_path):
     assert m4a.exists()
     assert m4a.suffix == ".m4a"
     assert dur > 0.3, f"narration too short: {dur:.2f}s"
+
+
+# ---------------------------------------------------------------------------
+# Voice resolution: premium voices may be missing; we match + fall back.
+# ---------------------------------------------------------------------------
+
+def test_list_voices_parses_premium_name(monkeypatch):
+    from video_claw.tts import macos
+    import subprocess as sp
+    sample = "Samantha           en_US    # Hello\nZoe (Premium)      en_US    # Hi\n"
+
+    class _R:
+        stdout = sample
+
+    monkeypatch.setattr(sp, "run", lambda *a, **k: _R())
+    voices = macos._list_installed_voices("say")
+    assert "Zoe (Premium)" in voices
+    assert "Samantha" in voices
+
+
+def test_resolve_voice_substring_match(monkeypatch):
+    from video_claw.tts import macos
+    monkeypatch.setattr(macos, "_list_installed_voices",
+                        lambda b: ["Samantha", "Zoe (Premium)"])
+    assert macos._resolve_voice("Zoe", "say") == "Zoe (Premium)"
+
+
+def test_resolve_voice_falls_back_to_samantha(monkeypatch, capsys):
+    from video_claw.tts import macos
+    monkeypatch.setattr(macos, "_list_installed_voices", lambda b: ["Samantha"])
+    assert macos._resolve_voice("Zoe (Premium)", "say") == "Samantha"
+    assert "Falling back to Samantha" in capsys.readouterr().out
