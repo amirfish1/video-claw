@@ -183,6 +183,8 @@ CONFIG = {
     "title": "%(title)s",
     "orientation": "%(orientation)s",   # "horizontal" or "short"
     "out_path": "out/%(slug)s.mp4",
+    # "mode": "free",  # $0 render: macOS `say` voice, static Becky avatar on
+    #                  # every slide, free estimated captions, no paid APIs.
     "tts": {
         "provider": "elevenlabs",
         "voice_id": "cgSgspJ2msm6clMCkdW9",  # ElevenLabs Jessica

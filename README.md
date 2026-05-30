@@ -49,6 +49,10 @@ https://github.com/user-attachments/assets/180d77f3-e847-4e39-901c-bddccbed25ad
   `short` (1080x1920) for Shorts, TikTok, Reels.
 - **Two TTS providers.** ElevenLabs (default, with timestamps for captions)
   or Deepgram (cheaper, no captions).
+- **Free / $0 mode.** Set `CONFIG["mode"] = "free"` for a no-cost render:
+  local macOS `say` voice (e.g. Zoe Premium), a static Becky avatar badge on
+  every slide, and free estimated-timing captions — zero paid API calls.
+  macOS only.
 - **Optional lipsync.** Set `lipsync: True` on any slide; fal.ai overlays a
   circular AI presenter in the bottom-right.
 - **Word-aligned captions.** Burned in via libass when available, otherwise

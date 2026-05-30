@@ -182,6 +182,21 @@ Tell the user the budget up front:
 - A typical 5-minute video with 30 seconds of lipsync bookends: ~$6 total.
 - Re-renders are free (content-hash cache).
 
+### Free / $0 mode
+
+Set `CONFIG["mode"] = "free"` for a render that costs nothing. It forces:
+
+- **macOS `say` TTS** (offline; default voice `"Zoe (Premium)"`, falling back
+  to `Samantha` if Zoe isn't downloaded). Override with `tts.macos_voice`.
+- **No fal.ai lip-sync** — any slide `lipsync: True` is ignored.
+- **Static presenter** — Becky (bundled `assets/avatar.png`) as a circular
+  badge in the bottom-right of every slide. Override the image with
+  `avatar.image`.
+- **Free estimated-timing captions** — burned in locally, no API.
+
+Use it when the user says "make a *free* video", "no budget", or "$0". macOS
+only (Linux users keep ElevenLabs/Deepgram).
+
 ## When things go wrong
 
 - **Caption burn fails.** Stock Homebrew ffmpeg lacks libass. Run
