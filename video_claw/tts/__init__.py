@@ -18,6 +18,7 @@ Voice defaults (DO NOT change without reading CLAUDE.md):
 from __future__ import annotations
 import base64
 import json
+import platform
 import subprocess
 import urllib.error
 import urllib.request
@@ -29,12 +30,12 @@ from . import macos as _macos
 
 
 DEFAULT_TTS = {
-    "provider": "elevenlabs",
+    "provider": "auto",
     "voice_id": "cgSgspJ2msm6clMCkdW9",  # Jessica
     "model": "eleven_turbo_v2_5",
     "speaking_rate": 1.0,
     "deepgram_voice": "aura-2-thalia-en",
-    "macos_voice": "Samantha",
+    "macos_voice": "auto",
 }
 
 
@@ -209,17 +210,51 @@ def make_audio_macos(text: str, idx: int, *, workdir: Path,
     return target_m4a, _ffprobe_duration(target_m4a)
 
 
+def resolve_provider(tts_cfg: Dict[str, Any]) -> str:
+    """Resolve a (possibly "auto") provider to a concrete one from keys + platform.
+
+    Explicit providers pass through unchanged (the per-provider function still
+    raises its own clear error if that provider's key is missing). "auto" (the
+    default) picks the best available: ElevenLabs -> Deepgram -> macOS local;
+    if none is possible (Linux, no keys) it raises a single clear error.
+    Pure: no network, no synthesis. Safe to call repeatedly (idempotent).
+    """
+    provider = (tts_cfg or {}).get("provider") or "auto"
+    provider = provider.lower()
+    if provider in ("elevenlabs", "el", "eleven"):
+        return "elevenlabs"
+    if provider == "deepgram":
+        return "deepgram"
+    if provider in ("macos", "say", "macos-say"):
+        return "macos"
+    if provider != "auto":
+        return provider  # unknown explicit value; dispatch will raise a clear error
+
+    if keys.get("ELEVENLABS_API_KEY"):
+        return "elevenlabs"
+    if keys.get("DEEPGRAM_API_KEY"):
+        return "deepgram"
+    if platform.system() == "Darwin":
+        return "macos"
+    raise RuntimeError(
+        "No TTS available: set ELEVENLABS_API_KEY or DEEPGRAM_API_KEY, or run "
+        "on macOS for free local TTS (provider=auto found no usable option)."
+    )
+
+
 def make_audio(text: str, idx: int, *, workdir: Path, cache,
                tts_cfg: Dict[str, Any]) -> Tuple[Path, float]:
-    """Dispatch to the configured provider. Falls back to ElevenLabs when unset."""
-    provider = (tts_cfg.get("provider") or DEFAULT_TTS["provider"]).lower()
+    """Dispatch to the resolved provider. `provider:"auto"` (the default) picks
+    the best available from the keys present (see `resolve_provider`)."""
+    provider = resolve_provider(tts_cfg)
+    tts_cfg = {**tts_cfg, "provider": provider}
     if provider == "deepgram":
         return make_audio_deepgram(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
-    if provider in ("macos", "say", "macos-say"):
+    if provider == "macos":
         return make_audio_macos(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
-    if provider in ("elevenlabs", "el", "eleven"):
+    if provider == "elevenlabs":
         return make_audio_elevenlabs(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
     raise ValueError(
         f"Unknown TTS provider: {provider!r}. "
-        "Use 'elevenlabs', 'deepgram', or 'macos'."
+        "Use 'auto', 'elevenlabs', 'deepgram', or 'macos'."
     )
