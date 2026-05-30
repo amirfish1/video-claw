@@ -17,7 +17,7 @@ def test_free_mode_forces_macos_and_strips_lipsync(tmp_path):
     )
     project = cfg_mod.load(tmp_path)
     assert project.config["tts"]["provider"] == "macos"
-    assert project.config["tts"]["macos_voice"] == "Zoe (Premium)"
+    assert project.config["tts"]["macos_voice"] == "auto"
     assert project.config["avatar"]["static"] is True
     assert project.config["avatar"]["scope"] == "all"
     assert project.config["captions"]["estimate"] is True
@@ -46,3 +46,15 @@ def test_non_free_mode_untouched(tmp_path):
     assert project.config["tts"]["provider"] == "elevenlabs"
     assert project.config["avatar"]["static"] is False
     assert project.slides[0]["lipsync"] is True
+
+
+def test_default_provider_and_captions(tmp_path):
+    from video_claw import config as cfg_mod
+    _write_project(
+        tmp_path, '{}',
+        '[{"type": "html", "html": "a.html", "narration": "hi"}]',
+    )
+    project = cfg_mod.load(tmp_path)
+    assert project.config["tts"]["provider"] == "auto"
+    assert project.config["tts"]["macos_voice"] == "auto"
+    assert project.config["captions"]["estimate"] is True

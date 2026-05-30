@@ -44,12 +44,14 @@ DEFAULT_CONFIG = {
     "orientation": "horizontal",  # "horizontal" (1920x1080) or "short" (1080x1920)
     "out_path": "out/video.mp4",
     "tts": {
-        "provider": "elevenlabs",
+        "provider": "auto",  # auto-select EL -> Deepgram -> macOS from the keys present
         "voice_id": "cgSgspJ2msm6clMCkdW9",  # Jessica (matches CCC-outreach default)
         "model": "eleven_turbo_v2_5",
         "speaking_rate": 1.0,
         # Deepgram fallback voice if provider=deepgram
         "deepgram_voice": "aura-2-thalia-en",
+        # macOS local voice; "auto" picks the best installed English voice
+        "macos_voice": "auto",
     },
     "lipsync": {
         "avatar": "assets/avatar.png",  # relative to project dir; only used on slides with lipsync=True
@@ -64,7 +66,7 @@ DEFAULT_CONFIG = {
         "diameter": 280,
     },
     "captions": {
-        "estimate": False,     # estimate caption timing when TTS gives no alignment
+        "estimate": True,      # always caption: estimate timing when TTS gives no alignment
     },
 }
 
@@ -119,7 +121,7 @@ def _apply_free_mode(config: dict, slides: list) -> None:
     """
     tts = config.setdefault("tts", {})
     tts["provider"] = "macos"
-    tts.setdefault("macos_voice", "Zoe (Premium)")
+    tts.setdefault("macos_voice", "auto")  # best installed voice; respects an explicit override
 
     for slide in slides:
         slide.pop("lipsync", None)  # never call paid fal.ai in free mode
