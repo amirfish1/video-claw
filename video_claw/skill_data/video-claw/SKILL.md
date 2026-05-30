@@ -197,6 +197,14 @@ Set `CONFIG["mode"] = "free"` for a render that costs nothing. It forces:
 Use it when the user says "make a *free* video", "no budget", or "$0". macOS
 only (Linux users keep ElevenLabs/Deepgram).
 
+### Provider selection (auto by default)
+
+`tts.provider` defaults to `"auto"`: ElevenLabs if `ELEVENLABS_API_KEY` is set,
+else Deepgram if `DEEPGRAM_API_KEY` is set, else macOS local TTS (Mac only).
+Pin a provider explicitly to force it. Captions are always produced —
+word-aligned for ElevenLabs, estimated otherwise. So a brand-new user with no
+keys still gets a complete captioned video on a Mac; keys only raise quality.
+
 ## When things go wrong
 
 - **Caption burn fails.** Stock Homebrew ffmpeg lacks libass. Run

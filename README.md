@@ -47,8 +47,11 @@ https://github.com/user-attachments/assets/180d77f3-e847-4e39-901c-bddccbed25ad
 - **HTML slides.** Write them like web pages with full CSS. No bespoke DSL.
 - **Two orientations.** `horizontal` (1920x1080) for YouTube and embeds,
   `short` (1080x1920) for Shorts, TikTok, Reels.
-- **Two TTS providers.** ElevenLabs (default, with timestamps for captions)
-  or Deepgram (cheaper, no captions).
+- **Works with zero keys.** `provider` defaults to `"auto"`: it uses ElevenLabs
+  if you have a key, else Deepgram, else free macOS local TTS — no config, no
+  hard failure. Add keys to upgrade quality.
+- **Captions always.** Word-aligned from ElevenLabs; estimated from Deepgram /
+  macOS. Never silently dropped.
 - **Free / $0 mode.** Set `CONFIG["mode"] = "free"` — local macOS voice,
   static Becky avatar, free captions, zero paid API calls (macOS only).
   See [Free / $0 mode](#free--0-mode).
@@ -138,7 +141,10 @@ video-claw install-skill
 
 ## API keys
 
-The minimum is one TTS key. Lipsync is opt-in per slide.
+**No keys are required** — on a Mac, `provider:"auto"` renders with free local
+TTS out of the box. Add a TTS key to upgrade quality; lipsync is opt-in per
+slide. Keys only become mandatory when you pin a paid provider explicitly or
+run on Linux with no key.
 
 | Key | Required when | Where to get it |
 | --- | --- | --- |
