@@ -60,6 +60,30 @@ def _lipsync_overlay_cmd(png: Path, circle: Path, m4a: Path, out: Path,
     ]
 
 
+def _static_avatar_overlay_cmd(png: Path, badge: Path, m4a: Path, out: Path,
+                               ox: int, oy: int, pad_dur: float) -> List[str]:
+    """Overlay a STILL circular avatar PNG (looped) in the bottom-right slot.
+
+    Identical to `_lipsync_overlay_cmd` except the badge is a still image
+    (`-loop 1`) rather than a looped MOV.
+    """
+    return [
+        "ffmpeg", "-y",
+        "-loop", "1", "-i", str(png),
+        "-loop", "1", "-i", str(badge),
+        "-i", str(m4a),
+        "-filter_complex",
+        f"[0:v][1:v]overlay=x={ox}:y={oy}:shortest=0[v];"
+        f"[2:a]apad=pad_dur=0.15[a]",
+        "-map", "[v]", "-map", "[a]",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p",
+        "-t", f"{pad_dur:.3f}",
+        "-c:a", "aac", "-b:a", "192k",
+        "-r", "30", "-shortest",
+        str(out),
+    ]
+
+
 def _still_slide_cmd(png: Path, m4a: Path, out: Path, pad_dur: float) -> List[str]:
     return [
         "ffmpeg", "-y",
@@ -79,7 +103,8 @@ def _still_slide_cmd(png: Path, m4a: Path, out: Path, pad_dur: float) -> List[st
 def make_slide_video(png: Path, m4a: Path, duration: float, idx: int, *,
                      slide: Dict[str, Any], workdir: Path, cache,
                      dimensions: Tuple[int, int],
-                     lipsync_circle: Optional[Path] = None) -> Path:
+                     lipsync_circle: Optional[Path] = None,
+                     avatar_circle: Optional[Path] = None) -> Path:
     """Build one slide MP4. Returns the per-slide MP4 path under workdir.
 
     `lipsync_circle` is the pre-cropped circular MOV (caller decides whether
@@ -114,6 +139,17 @@ def make_slide_video(png: Path, m4a: Path, duration: float, idx: int, *,
         ox = width - diameter - margin
         oy = height - diameter - margin - 30
         cmd = _lipsync_overlay_cmd(png, lipsync_circle, m4a, out, ox, oy, pad_dur)
+        subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        return out
+
+    # Variant 2b: static avatar badge (free mode). Same bottom-right slot as
+    # lip-sync, but a still PNG. Lip-sync (above) takes precedence if both set.
+    if avatar_circle is not None:
+        diameter = 280
+        margin = 40
+        ox = width - diameter - margin
+        oy = height - diameter - margin - 30
+        cmd = _static_avatar_overlay_cmd(png, avatar_circle, m4a, out, ox, oy, pad_dur)
         subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         return out
 
