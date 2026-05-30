@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable
 
 
-_KINDS = ("chrome", "tts", "m4a", "lipsync", "circle", "slide_mp4", "misc")
+_KINDS = ("chrome", "tts", "m4a", "lipsync", "circle", "avatar_circle", "slide_mp4", "misc")
 
 
 def _force_regen() -> bool:
