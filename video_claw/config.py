@@ -56,6 +56,16 @@ DEFAULT_CONFIG = {
         "fal_omnihuman_version": "v1.5",
         "resolution": "720p",
     },
+    "mode": None,  # set to "free" for a $0 render (macOS TTS, static avatar, no paid APIs)
+    "avatar": {
+        "static": False,       # overlay a still circular avatar badge
+        "scope": "all",        # "all" | "intro" | "flagged"
+        "image": None,         # path rel. to project; falls back to lipsync.avatar then bundled
+        "diameter": 280,
+    },
+    "captions": {
+        "estimate": False,     # estimate caption timing when TTS gives no alignment
+    },
 }
 
 
@@ -86,13 +96,44 @@ class Project:
 
 
 def _deep_merge(base: dict, over: dict) -> dict:
-    out = dict(base)
+    # Deep-copy all base dict values so downstream mutations never bleed back
+    # into DEFAULT_CONFIG (or whichever base was passed).
+    out: dict = {}
+    for k, v in base.items():
+        out[k] = _deep_merge(v, {}) if isinstance(v, dict) else v
     for k, v in over.items():
         if k in out and isinstance(out[k], dict) and isinstance(v, dict):
             out[k] = _deep_merge(out[k], v)
         else:
             out[k] = v
     return out
+
+
+def _apply_free_mode(config: dict, slides: list) -> None:
+    """Mutate `config` + `slides` in place so the render costs $0.
+
+    Free mode FORCES the free/local path (it does not merely default to it),
+    so a stray `provider: "elevenlabs"` or a slide-level `lipsync: True` left
+    in the project file cannot silently incur cost. A user-set `macos_voice`
+    is respected.
+    """
+    tts = config.setdefault("tts", {})
+    tts["provider"] = "macos"
+    tts.setdefault("macos_voice", "Zoe (Premium)")
+
+    for slide in slides:
+        slide.pop("lipsync", None)  # never call paid fal.ai in free mode
+
+    avatar = config.setdefault("avatar", {})
+    avatar["static"] = True
+    avatar.setdefault("scope", "all")
+    avatar.setdefault("diameter", 280)
+    if not avatar.get("image"):
+        # fall back to the lipsync avatar path; avatar.resolve_avatar_image
+        # falls back further to the bundled Becky portrait at render time.
+        avatar["image"] = (config.get("lipsync") or {}).get("avatar")
+
+    config.setdefault("captions", {})["estimate"] = True
 
 
 def load(project_dir: Path) -> Project:
@@ -121,6 +162,8 @@ def load(project_dir: Path) -> Project:
         )
 
     config = _deep_merge(DEFAULT_CONFIG, user_cfg)
+    if config.get("mode") == "free":
+        _apply_free_mode(config, slides)
     return Project(project_dir=project_dir, config=config, slides=slides)
 
 
