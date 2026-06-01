@@ -85,7 +85,7 @@ Prompt: "Widescreen 16:9 cinematic over-the-shoulder close-up, prestige-TV offic
 - [ ] **Step 5: Shot 7 — customer-project placeholder**
 
 Prompt: "Widescreen 16:9 cinematic interior, prestige-TV office drama, teal-and-amber grade, film grain. A young blue-shirted agent (Gemini tribe, original ring/orbit insignia, faint cool-blue haze) presents in the glass room; the wall screen shows an abstract generic small-business app dashboard (charts, a calendar, a booking widget), clearly a customer project with no real branding. Executive silhouette watches. No readable text."
-`mv` → `review-room/stills/shot_07.png`. (Placeholder; swap real Ineed AI clip in Phase 2.)
+`mv` → `review-room/stills/shot_07.png`. (Placeholder; swap real Kneaded.ai clip in Phase 2.)
 
 - [ ] **Step 6: Shot 8 — approval beat**
 
@@ -145,8 +145,8 @@ W, H, FPS = 1920, 1080, 30
 # A common macOS TrueType font; change if missing on this machine.
 FONT = "/System/Library/Fonts/Supplemental/Arial.ttf"
 
-SLATE_TITLE = "This is how Ineed AI ships."
-SLATE_CTA = "Ineed AI  -  your small business, run by agents."
+SLATE_TITLE = "This is how Kneaded.ai ships."
+SLATE_CTA = "Kneaded.ai  -  your small business, run by agents."
 
 # id, source, kind, duration_s, motion, fade_in, fade_out
 SHOTS = [
@@ -170,7 +170,7 @@ VO_LINES = [
     (15.0, "Every task gets reviewed before it reaches my desk."),
     (22.0, "Then, one by one, they come in and present."),
     (40.0, "I approve. Or I send it back."),
-    (49.0, "This is how Ineed AI ships."),
+    (49.0, "This is how Kneaded.ai ships."),
 ]
 
 
@@ -421,7 +421,7 @@ placeholder.
 - [ ] **Step 3: Hand over the Phase-2 blueprint + caption**
 
 In the message: list the marquee shots to regenerate externally (1, 4, 9, 10)
-with their Task-2 prompts; note where to drop the real Ineed AI clip (the `SHOTS`
+with their Task-2 prompts; note where to drop the real Kneaded.ai clip (the `SHOTS`
 row 07 → swap to a `"screen"` row) and exact brand/CCC logos; remind that a
 royalty-free or user-supplied music bed goes under the VO in Phase 2; offer a
 9:16 teaser crop; and paste the draft LinkedIn caption from the spec.

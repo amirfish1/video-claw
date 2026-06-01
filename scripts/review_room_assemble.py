@@ -23,22 +23,28 @@ W, H, FPS = 1920, 1080, 30
 # A common macOS TrueType font; change if missing on this machine.
 FONT = "/System/Library/Fonts/Supplemental/Arial.ttf"
 
-SLATE_TITLE = "This is how Ineed AI ships."
-SLATE_CTA = "Ineed AI  -  your small business, run by agents."
+SLATE_TITLE = "This is how Kneaded.ai ships."
+SLATE_CTA = "Kneaded.ai  -  your small business, run by agents."
 
-# id, source, kind, duration_s, motion, fade_in, fade_out
+# Real customer-project clip presented at the shot-7 review beat.
+TELEMETRY_CLIP = Path(
+    "/Users/amirfish/Apps/ccc-outreach/growth-machine/"
+    "ccc-telemetry-pitch/out/ccc-telemetry-pitch.mp4")
+
+# id, source, kind, duration_s, motion, fade_in, fade_out, seek_s
+# (seek_s = in-point for "screen" clips; ignored for stills/slate)
 SHOTS = [
-    ("01", STILLS / "shot_01.png", "still", 6, "in",  True,  False),
-    ("02", STILLS / "shot_02.png", "still", 5, "pan", False, False),
-    ("03", STILLS / "shot_03.png", "still", 4, "in",  False, True),   # act break
-    ("04", STILLS / "shot_04.png", "still", 4, "in",  True,  False),
-    ("05", ROOT / "docs/free-mode-demo.mp4", "screen", 10, None, True, True),
-    ("06", STILLS / "shot_06.png", "still", 3, "in",  False, False),
-    ("07", STILLS / "shot_07.png", "still", 6, "pan", False, True),   # act break
-    ("08", STILLS / "shot_08.png", "still", 4, "in",  True,  False),
-    ("09", STILLS / "shot_09.png", "still", 6, "pan", False, False),
-    ("10", STILLS / "shot_10.png", "still", 7, "out", False, True),
-    ("11", None,                   "slate", 4, None,  True,  True),
+    ("01", STILLS / "shot_01.png", "still", 6, "in",  True,  False, 0),
+    ("02", STILLS / "shot_02.png", "still", 5, "pan", False, False, 0),
+    ("03", STILLS / "shot_03.png", "still", 4, "in",  False, True,  0),   # act break
+    ("04", STILLS / "shot_04.png", "still", 4, "in",  True,  False, 0),
+    ("05", ROOT / "docs/free-mode-demo.mp4", "screen", 10, None, True, True, 0),
+    ("06", STILLS / "shot_06.png", "still", 3, "in",  False, False, 0),
+    ("07", TELEMETRY_CLIP,         "screen", 6, None, False, True, 33),   # act break
+    ("08", STILLS / "shot_08.png", "still", 4, "in",  True,  False, 0),
+    ("09", STILLS / "shot_09.png", "still", 6, "pan", False, False, 0),
+    ("10", STILLS / "shot_10.png", "still", 7, "out", False, True,  0),
+    ("11", None,                   "slate", 4, None,  True,  True,  0),
 ]
 
 # (desired_start, text). Actual offsets recomputed from measured WAV durations.
@@ -48,7 +54,7 @@ VO_LINES = [
     (15.0, "Every task gets reviewed before it reaches my desk."),
     (22.0, "Then, one by one, they come in and present."),
     (40.0, "I approve. Or I send it back."),
-    (49.0, "This is how Ineed AI ships."),
+    (49.0, "This is how Kneaded ships."),
 ]
 
 
@@ -114,9 +120,11 @@ def ken_burns(src, dur, motion, fin, fout, out):
          "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)])
 
 
-def screen_shot(src, dur, fin, fout, out):
-    """Graded 'on the room screen' composite so the demo lives in the world."""
-    bg = STILLS / "shot_05.png"
+def screen_shot(src, bg, dur, fin, fout, out, ss=0):
+    """Graded 'on the room screen' composite so a real clip lives in the world.
+
+    `bg` is the per-shot room still; `ss` is the clip in-point (seconds).
+    """
     fl = ["format=yuv420p"] + _fades(dur, fin, fout)
     fc = (
         f"[0:v]scale={W}:{H}:force_original_aspect_ratio=increase,"
@@ -128,8 +136,9 @@ def screen_shot(src, dur, fin, fout, out):
         + ",".join(fl) + "[v]"
     )
     run(["ffmpeg", "-y", "-loop", "1", "-t", str(dur), "-i", str(bg),
-         "-i", str(src), "-filter_complex", fc, "-map", "[v]", "-t", str(dur),
-         "-r", str(FPS), "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)])
+         "-ss", str(ss), "-i", str(src), "-filter_complex", fc, "-map", "[v]",
+         "-t", str(dur), "-r", str(FPS), "-an", "-c:v", "libx264",
+         "-pix_fmt", "yuv420p", str(out)])
 
 
 def make_slate(dur, fin, fout, out):
@@ -194,12 +203,13 @@ def main():
     listfile = WORK / "concat.txt"
     total = 0.0
     with listfile.open("w") as f:
-        for sid, src, kind, dur, motion, fin, fout in SHOTS:
+        for sid, src, kind, dur, motion, fin, fout, ss in SHOTS:
             out = CLIPS / f"shot_{sid}.mp4"
             if kind == "still":
                 ken_burns(src, dur, motion, fin, fout, out)
             elif kind == "screen":
-                screen_shot(src, dur, fin, fout, out)
+                bg = STILLS / f"shot_{sid}.png"
+                screen_shot(src, bg, dur, fin, fout, out, ss)
             elif kind == "slate":
                 make_slate(dur, fin, fout, out)
             f.write(f"file '{out.as_posix()}'\n")

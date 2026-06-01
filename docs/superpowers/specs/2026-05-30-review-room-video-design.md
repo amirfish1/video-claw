@@ -1,10 +1,10 @@
-# Design: "The Review Room" — Ineed AI LinkedIn film (Phase 1)
+# Design: "The Review Room" — Kneaded.ai LinkedIn film (Phase 1)
 
 Date: 2026-05-30 · Rev 2 (incorporates Codex + Antigravity/Gemini peer review)
 
 ## Goal
 
-A ~55–60s cinematic LinkedIn film that brags about how **Ineed AI** (an AI-for-
+A ~55–60s cinematic LinkedIn film that brags about how **Kneaded.ai** (an AI-for-
 small-business startup) operates: a one-person company that ships like a team,
 because the team is **AI agents**. The agents peer-review each other (the
 orchestration layer) before presenting their work to the founder in a VP-style
@@ -40,7 +40,7 @@ burned captions + the post caption carry the *substance*.
 
 ## Hero message (hierarchy)
 
-The **operating model** stays dominant ("this is how Ineed AI ships — a bench of
+The **operating model** stays dominant ("this is how Kneaded.ai ships — a bench of
 agents I review like a VP"). The **$0 video-claw feature** is framed as *proof*,
 a standout mid-roll beat, **not a detour**. End on the operating-model note.
 
@@ -86,7 +86,7 @@ a standout mid-roll beat, **not a detour**. End on the operating-model note.
    vignetted to live inside the cinematic world (not a raw full-frame cut). 10s
 6. VP reaction — a considered beat. 3s
 7. **[REAL CLIP #2 — placeholder]** a different tribe presents a customer-facing
-   Ineed AI project (stand-in frame; swap real clip in Phase 2). 6s
+   Kneaded.ai project (stand-in frame; swap real clip in Phase 2). 6s
 
 **Act 3 — The Verdict + Reveal (~19s)**
 8. Approval beat — the agent's insignia pulses **green**; the nod. 4s
@@ -96,7 +96,7 @@ a standout mid-roll beat, **not a detour**. End on the operating-model note.
     silhouette resolves into the **founder, alone** at the table, the glass
     reflecting a **scrolling terminal** — blurring founder and orchestration
     engine. 7s
-11. **End slate** — logline **"This is how Ineed AI ships."** + a CTA line, clean
+11. **End slate** — logline **"This is how Kneaded.ai ships."** + a CTA line, clean
     typography, ~4s (autoplay/loop-friendly). 4s
 
 ## Narration (video-claw $0 VO) + mute-first captions
@@ -110,7 +110,7 @@ placed **duration-aware** (measured per WAV) so they never overlap. Script:
 3. "Every task gets reviewed before it reaches my desk."   *(sharper founder line)*
 4. "Then, one by one, they come in and present."
 5. "I approve. Or I send it back."
-6. "This is how Ineed AI ships."
+6. "This is how Kneaded.ai ships."
 
 **Audio polish:** a full-length silent base anchors the mix; final **`loudnorm`**
 (I=-16, TP=-1.5). A music bed is **Phase 2** (royalty-free or user-supplied) — no
@@ -124,7 +124,7 @@ crossfades are a Phase-2 polish; dips are reliable now.)
 
 ## Caption (LinkedIn post copy — proposed)
 
-> I run Ineed AI mostly alone — but it doesn't ship like a one-person company.
+> I run Kneaded.ai mostly alone — but it doesn't ship like a one-person company.
 >
 > I run a bench of AI agents across Claude, Codex and Gemini. Some build for our
 > small-business customers; some rebuild our own backend. Before anything reaches
@@ -152,7 +152,7 @@ crossfades are a Phase-2 polish; dips are reliable now.)
 
 - Have: `docs/free-mode-demo.mp4` (real clip #5); concept frames in
   `nanobanana-output/`.
-- Needed later (Phase 2 / user-supplied): real customer Ineed AI clip (#7), CCC
+- Needed later (Phase 2 / user-supplied): real customer Kneaded.ai clip (#7), CCC
   logo, exact brand logos, music bed.
 
 ## Out of scope (Phase 1)
