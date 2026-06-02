@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/review-room/STATE.md\" && printf '\\n=== Review Room film STATE (auto-loaded) ===\\n' && cat \"$CLAUDE_PROJECT_DIR/review-room/STATE.md\""
+          }
+        ]
+      }
+    ]
+  }
+}

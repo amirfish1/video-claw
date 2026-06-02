@@ -264,6 +264,10 @@ def main():
             f.write(f"{i}\n{_srt_ts(start)} --> {_srt_ts(start+d)}\n{text}\n\n")
     print("\nWROTE", final, f"(~{total:.0f}s)  diagram_anim={'yes' if DIAGRAM_ANIM.exists() else 'no (static fallback)'}")
 
+    # Keep STATE.md's technical block self-maintaining (never clobbers Decisions).
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "stamp_state.py"),
+                    str(final), "scripts/review_room_surprise.py"], check=False)
+
 
 if __name__ == "__main__":
     main()
