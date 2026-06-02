@@ -4,7 +4,7 @@
 Stills (centered Ken Burns) + graded screen-composite of the real $0 demo +
 end slate + duration-aware video-claw $0 narration + burned mute-first captions
 + silent-anchored, loudnorm'd audio (no -shortest truncation).
-Output: review-room/review-room-v1.mp4 (+ .srt). Run from repo root:
+Output: review-room/output/v1.mp4 (+ v1.srt). Run from repo root:
     python3 scripts/review_room_assemble.py
 """
 import subprocess
@@ -13,10 +13,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 RR = ROOT / "review-room"
-STILLS = RR / "stills"
+STILLS = RR / "v1" / "owned" / "stills"
 WORK = RR / "work"
 CLIPS = WORK / "clips"
-for d in (WORK, CLIPS):
+# Phase-2 motion clips (image-to-video). A "still" shot auto-upgrades to its
+# motion clip when present here; otherwise it falls back to the Ken-Burns still.
+MOTION_DIR = RR / "v1" / "owned" / "motion"
+OUT = RR / "output"
+for d in (WORK, CLIPS, OUT):
     d.mkdir(parents=True, exist_ok=True)
 
 W, H, FPS = 1920, 1080, 30
@@ -141,6 +145,23 @@ def screen_shot(src, bg, dur, fin, fout, out, ss=0):
          "-pix_fmt", "yuv420p", str(out)])
 
 
+def prep_motion_clip(src, dur, fin, fout, out):
+    """Normalize a Phase-2 image-to-video clip into the shot slot: scale/pad to
+    1920x1080, setsar/fps, hold the last frame if the clip is short, trim to dur,
+    same fades. No Ken Burns, no audio.
+    """
+    fl = _fades(dur, fin, fout)
+    vf = (
+        f"scale={W}:{H}:force_original_aspect_ratio=increase,"
+        f"crop={W}:{H}:(in_w-{W})/2:(in_h-{H})/2,setsar=1,fps={FPS},"
+        f"tpad=stop_mode=clone:stop_duration=12,format=yuv420p"
+    )
+    if fl:
+        vf += "," + ",".join(fl)
+    run(["ffmpeg", "-y", "-i", str(src), "-an", "-vf", vf, "-t", str(dur),
+         "-r", str(FPS), "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)])
+
+
 def make_slate(dur, fin, fout, out):
     t = WORK / "slate_title.txt"
     t.write_text(SLATE_TITLE)
@@ -206,7 +227,11 @@ def main():
         for sid, src, kind, dur, motion, fin, fout, ss in SHOTS:
             out = CLIPS / f"shot_{sid}.mp4"
             if kind == "still":
-                ken_burns(src, dur, motion, fin, fout, out)
+                mclip = MOTION_DIR / f"shot_{sid}.mp4"
+                if mclip.exists():
+                    prep_motion_clip(mclip, dur, fin, fout, out)
+                else:
+                    ken_burns(src, dur, motion, fin, fout, out)
             elif kind == "screen":
                 bg = STILLS / f"shot_{sid}.png"
                 screen_shot(src, bg, dur, fin, fout, out, ss)
@@ -237,12 +262,12 @@ def main():
     captioned = WORK / "captioned.mp4"
     burn_captions(silent, placed, captioned)
 
-    final = RR / "review-room-v1.mp4"
+    final = OUT / "v1.mp4"
     run(["ffmpeg", "-y", "-i", str(captioned), "-i", str(audio),
          "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "copy",
          "-shortest", str(final)])  # safe: video and audio are both == total
 
-    srt = RR / "review-room-v1.srt"
+    srt = OUT / "v1.srt"
     with srt.open("w") as f:
         for i, (start, d, _w, text) in enumerate(placed, start=1):
             f.write(f"{i}\n{_srt_ts(start)} --> {_srt_ts(start+d)}\n{text}\n\n")
