@@ -43,10 +43,10 @@ def read(proj):
             S = {
                 "id": seg["id"][:8],
                 "material": name,
-                "timeline": [_us(seg.get("target_timerange", {}).get("start")),
-                             _us((seg.get("target_timerange", {}).get("start", 0)) + (seg.get("target_timerange", {}).get("duration", 0)))],
-                "source": [_us(seg.get("source_timerange", {}).get("start")),
-                           _us((seg.get("source_timerange", {}).get("start", 0)) + (seg.get("source_timerange", {}).get("duration", 0)))],
+                "timeline": [_us((seg.get("target_timerange") or {}).get("start")),
+                             _us(((seg.get("target_timerange") or {}).get("start", 0)) + ((seg.get("target_timerange") or {}).get("duration", 0)))],
+                "source": [_us((seg.get("source_timerange") or {}).get("start")),
+                           _us(((seg.get("source_timerange") or {}).get("start", 0)) + ((seg.get("source_timerange") or {}).get("duration", 0)))],
                 "speed": seg.get("speed", 1),
             }
             # companion materials via extra_material_refs

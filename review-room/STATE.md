@@ -334,6 +334,23 @@ NOT committed yet (awaiting user OK).
    Fix in assembler: endcard beat 4→6s + last VO anchor 59.3→58.8; regenerated beats + vo_track
    (now 64.5s, final line ends 62.2 with full "AY" tail). Room tones bumped 0.4→1.0.
 KEY: `capcut-cli trim` sets the SOURCE window (offset+len) — the way to codify a clip/music crop.
+**v7 — TRANSITION-BASED ROOMS + v6 EDITS CODIFIED (06-03):** `v2.10-capcut-v7` via
+`review-room/capcut-pipeline/build_v210_capcut_v7.py`.
+- **Rooms now = raw live clip + empty Ken Burns clip + CapCut `dissolve` transition** (user's idea),
+  replacing the baked reveal_*_from_live clips. live = full raw source (big handles); empty lingers.
+  KEY: `capcut-cli transition` does NOT shift segments (verified) → reveal block stays 12s, no VO/music
+  drift. beat_05→bustling dissolve freezes the founder's last frame (founder-freeze for free, no handle).
+  User drags live/empty ratio + edits transitions in CapCut. Defaults: live 1.0s, empty 2.75–3.25s.
+- **CLIP-HANDLES RULE (user, saved to memory):** provide clips LONGER than used + position via trim so
+  they can be lengthened in CapCut without regenerating. Transitions need handles to dissolve cleanly.
+- **v6 hand-edits codified** (read back via read_project + extracted to `v2.10_captions_user.srt`):
+  music A extended to 26.67 + 0.67s fade-out (JSON audio_fade); music B @38.0/src3.07/vol0.26;
+  bass vol 10 (JSON; add-audio caps at 1.0); 15 re-authored captions + style. `_post_json()` applies
+  caption style + music-A fade + bass>1 directly in draft_info.json.
+- **DIFF BASELINE:** build snapshots `draft_info.json` → `review-room/v2.10/snapshots/<dest>_baseline.json`
+  so the NEXT round can diff the user's edits precisely (their requested workflow).
+- read_project.py bug fixed (null source/target_timerange). Lint 0 errors (3 cosmetic long-line warnings).
+
 **v5 STAGED — round-3 feedback (06-03, NOT yet built; needs CapCut CLOSED to run):**
 `review-room/capcut-pipeline/build_v210_capcut_v5.py`. Assets already rendered (ffmpeg, safe):
 1. **Founder→bustling dissolve entry:** `reveal_hub_from_live.mp4` rebuilt as founder_motion(1.6) →
