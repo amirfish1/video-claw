@@ -317,6 +317,48 @@ so swapping the new 62.4s master into 0603 would misalign; a clean v2.10 CapCut 
 Test artifacts (deletable): CapCut projects `0603-poc-swap`, `pipeline-test`; `output/poc-capcut/`.
 NOT committed yet (awaiting user OK).
 
+**CAPCUT ROUND-TRIP READ + v2 ROOM FADES (06-03):**
+- `review-room/capcut-pipeline/read_project.py <proj>` — reads a CapCut project's EDIT into a structured
+  summary (per segment: material, timeline/source ranges, speed, audio fade in/out, transitions,
+  image-anims, keyframes, volume). The round-trip half: captures what the user changed by hand.
+- USER'S v2.10-capcut HAND EDITS (captured via read_project): video split + **0.5× slow-mo on 9.5–13.23**
+  (debate beat) + VO re-split into 3; **music B moved to 35.47 + 2.83s fade-IN**; room tones nudged
+  ~1.3s earlier (24.73/28.73/32.73). 0603 fade reference: music A fade-OUT 2.6s into the reveal, B
+  fade-IN 2.67s (soft music cross-fade at the turn).
+- `review-room/capcut-pipeline/build_v210_capcut_v2.py` → project **`v2.10-capcut-v2`**: video is the
+  full PER-BEAT raw clips (14 segs, each independently editable); the baked reveal beat_06 is replaced by
+  **3 SEPARATE room segments (kenburns_hub/debate/meeting) each with a 1.0s image-anim FADE-IN** → 0603-style
+  soft room fade-ins + per-room control. Used `image-anim --intro fade-in` (timing-safe; a `transition`
+  would overlap/shorten segments and drift audio sync). Audio = clean timing (VO full + music A 0–26 /
+  B 38–end + room tones 26/30/34). Lint exit 0. User's original v2.10-capcut LEFT UNTOUCHED.
+- NOTE: v2 did NOT auto-replay the user's hand edits (the reveal restructure shifts timing); the per-beat
+  base makes re-doing trivial (debate slow-mo = `capcut-cli speed <beat_03a seg> 0.5`), and read_project
+  captures them for a future replay step.
+
+**v2.10 DELIVERED AS A CAPCUT PROJECT (06-03):** `v2.10-capcut` built FRESH via
+`review-room/capcut-pipeline/build_v210_capcut.py` (capcut-cli `init` + `add-video`/`add-audio` — tested
+write cmds, NO fragile segment surgery). Tracks: video=master 0–62.4 (1:1, slow-mo DROPPED — Ken Burns
+reveal is natively ~12s); VO=synced vo_track 0–62.5; music A 0–26 + B 38–62.4 (silence 26–38); room tones
+hub/debate/meeting 26–38 (fills the gap, replaces sub-bass). Lint exit 0. add-video/add-audio COPY media
+into `<proj>/assets/{video,audio}/` and reference via `##_draftpath_placeholder_<draft_info.id>_##` →
+sandbox-safe. GOTCHA: do NOT rewrite `draft_info.json` `id` after add-* (breaks the placeholder paths);
+give only `draft_meta_info.draft_id` a fresh unique value (the template's is shared) — `_finalize()` does
+this + registers in root_meta_info (backup .bak). Captions: import `raw-export/v2.10_captions.srt` manually.
+Delivers the user's "clone+update" vision; creative music/VO slide left to the user.
+
+**CAPCUT-CLI `init` FIXED (06-03):** `init` looked for a draft template at
+`/opt/homebrew/lib/node_modules/CapCutAPI/template` (cliDir + `/../CapCutAPI/template`; CapCutAPI is a
+SIBLING of capcut-cli in node_modules, NOT inside it) — never installed. Built an empty-timeline template
+(emptied 0603: tracks=[], materials all []], duration 0, blank meta/virtual_store) → reproducible copy at
+`review-room/capcut-pipeline/template/`, installed to the expected path. `capcut-cli init <name>` now
+returns ok + lints clean (empty 1920x1080/30fps). NOTE: node_modules copy is wiped by brew/npm upgrade →
+re-copy from the repo template, or pass `--template review-room/capcut-pipeline/template`.
+
+**MUSIC PIECES (where they live):** `music_A_suspense.mp3` (Act-1 suspense bed, ~52s) +
+`music_B_triumph.mp3` (Act-2 triumph, ~28s) → `review-room/output/stems-v2.9.1/`. Originals (same bytes,
+pre-rename): A = `review-room/v2.7/assets/music_eleven_v2.mp3`, B = `review-room/v2.8/assets/music_triumph.mp3`
+(both ElevenLabs Music API). v2.10 room tones → `review-room/v2.10/assets/roomtone_{hub,debate,meeting}.wav`.
+
 **v2.10 PARKING LOT (user thinking — DO NOT BUILD YET, 06-03):**
 1. Empty-office reveal = 3 empty rooms; replace the sub-bass STRETCH hack with: slow **Ken Burns**
    on each plate + a **distinct room tone per space** (each room has its own air).
