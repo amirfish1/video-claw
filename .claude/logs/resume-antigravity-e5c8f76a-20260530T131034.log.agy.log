@@ -1,0 +1,79 @@
+I0530 13:10:34.403103 15337 server.go:1306] Starting language server process with pid 15337
+I0530 13:10:34.405275 15337 server.go:476] Language server will attempt to listen on host localhost
+I0530 13:10:34.407401 15337 server.go:490] Language server listening on random port at 57526 for HTTPS (gRPC)
+I0530 13:10:34.407660 15337 server.go:497] Language server listening on random port at 57527 for HTTP
+W0530 13:10:34.587798 15337 launchmanager.go:69] Entering local chrome mode! This is WRONG unless you are running tests or in eval mode on Linux.
+E0530 13:10:34.594408 15337 log.go:398] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+W0530 13:10:34.596205 15337 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0530 13:10:34.596230 15337 log_context.go:117] Cache(availableModels): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0530 13:10:34.596262 15337 log.go:398] Failed to poll FetchAvailableModels: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I0530 13:10:34.597596 15337 server.go:2274] Auth succeeded, refreshing features and managers
+E0530 13:10:34.597636 15337 log.go:398] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+W0530 13:10:34.597783 15337 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0530 13:10:34.597794 15337 log_context.go:117] Cache(availableModels): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0530 13:10:34.597937 15337 log.go:398] Failed to poll FetchAvailableModels: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I0530 13:10:34.598113 15337 server.go:2280] State refresh took 0ms
+I0530 13:10:34.615329 15337 server.go:1938] initialized server successfully in 211.528459ms
+W0530 13:10:34.616976 15337 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0530 13:10:34.616998 15337 log_context.go:117] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0530 13:10:34.617283 15337 server.go:609] Failed to get OAuth token: error getting token source from auth provider: You are not logged into Antigravity.
+W0530 13:10:34.617339 15337 client.go:81] failed to set auth token
+I0530 13:10:34.621827 15337 auto_updater.go:253] Spawned background update process with PID 15341
+I0530 13:10:34.622149 15337 common.go:103] Launching CLI mode
+I0530 13:10:34.632351 15337 project.go:58] project: discovered project "/Users/amirfish" (id=ea535175-8cbc-4de2-afef-34a13ff3d560) via /Users/amirfish/.antigravitycli
+I0530 13:10:34.632380 15337 common.go:156] project: using project "/Users/amirfish" (id=ea535175-8cbc-4de2-afef-34a13ff3d560) at /Users/amirfish/.gemini/config/projects/ea535175-8cbc-4de2-afef-34a13ff3d560.json
+E0530 13:10:34.632402 15337 common.go:194] Failed to resolve GeminiDir ".gemini": .gemini must be an absolute path: path is not absolute, falling back to default
+I0530 13:10:34.632425 15337 common.go:203] CLI app data directory: /Users/amirfish/.gemini/antigravity-cli
+I0530 13:10:34.632736 15337 server.go:207] Creating CLI server backend: product=antigravity workspaceDirs=[] appDataDir=/Users/amirfish/.gemini/antigravity-cli cascadeManager=true codeAssist=true
+I0530 13:10:34.645588 15337 printmode.go:71] Print mode: starting (promptLength=51, model="", conversationID="e5c8f76a-ba5d-42db-8e56-ee51058ffb40")
+I0530 13:10:34.646599 15337 manager.go:250] Initializing CLI store manager for workspace /Users/amirfish/Apps/video-claw
+I0530 13:10:34.648539 15337 cli_setting_manager.go:626] Skipping telemetry propagation because user is not logged in
+I0530 13:10:34.648565 15337 cli_setting_manager.go:66] CLI settings initialized: permissions=&{Allow:[command(pwd) command(open)] Deny:[] Ask:[]}, toolPermission=always-proceed
+I0530 13:10:34.651622 15337 manager.go:321] CLI store manager initialized successfully
+I0530 13:10:34.651662 15337 printmode.go:164] Print mode: not authenticated, trying silent auth
+I0530 13:10:34.877173 15337 auth.go:114] ChainedAuth: authenticated via keyring (effective: keyring)
+I0530 13:10:34.877346 15337 server_oauth.go:212] applyAuthResult: email=amir.fish@gmail.com, authMethod=consumer, quotaProject=
+I0530 13:10:34.877362 15337 server_oauth.go:217] OAuth: authenticated successfully as amir.fish@gmail.com
+I0530 13:10:34.877372 15337 server_oauth.go:223] b.codeAssistClient.AuthProvider (0x1914c595d100) is same as b.cliAuth (0x1914c595d100)
+I0530 13:10:35.855721 15337 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x57629148efe779c2
+I0530 13:10:36.408358 15337 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: 0xa6eed7a53fddaa55
+I0530 13:10:36.410632 15337 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0530 13:10:37.075637 15337 printmode.go:166] Print mode: silent auth succeeded
+I0530 13:10:37.075673 15337 printmode.go:125] Print mode: resuming conversation e5c8f76a-ba5d-42db-8e56-ee51058ffb40
+I0530 13:10:37.075766 15337 conversation_manager.go:378] Streaming conversation e5c8f76a-ba5d-42db-8e56-ee51058ffb40
+I0530 13:10:37.075801 15337 input_loop.go:499] Auth done received, triggering experiment refresh
+I0530 13:10:37.075846 15337 experiment_manager.go:35] Starting experiment refresh after login
+I0530 13:10:37.077894 15337 server.go:774] Starting conversation update stream for e5c8f76a-ba5d-42db-8e56-ee51058ffb40
+I0530 13:10:37.077926 15337 printmode.go:130] Print mode: conversation=e5c8f76a-ba5d-42db-8e56-ee51058ffb40, sending message
+I0530 13:10:37.367370 15337 experiment_manager.go:39] Experiments refreshed after login
+I0530 13:10:37.367423 15337 manager.go:941] Reloading system slash commands
+I0530 13:10:37.367497 15337 conversation_manager.go:321] Forwarding user message to conversation e5c8f76a-ba5d-42db-8e56-ee51058ffb40 (items=1, media=0)
+I0530 13:10:37.367545 15337 server.go:1083] Sending user message to conversation e5c8f76a-ba5d-42db-8e56-ee51058ffb40 (items=1, media=0)
+I0530 13:10:37.371055 15337 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+E0530 13:10:37.374236 15337 discovery.go:383] Failed to load JSON config file /Users/amirfish/.gemini/config/mcp_config.json: unexpected end of JSON input
+I0530 13:10:37.991518 15337 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x79de59de864768e3
+I0530 13:10:38.710832 15337 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xddba6e8674d9faf4
+I0530 13:10:38.878132 15337 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0530 13:10:38.878206 15337 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0530 13:10:39.392084 15337 input_loop.go:499] Auth done received, triggering experiment refresh
+I0530 13:10:39.392135 15337 experiment_manager.go:35] Starting experiment refresh after login
+I0530 13:10:39.395745 15337 input_loop.go:499] Auth done received, triggering experiment refresh
+I0530 13:10:39.395770 15337 experiment_manager.go:35] Starting experiment refresh after login
+I0530 13:10:39.530327 15337 experiment_manager.go:39] Experiments refreshed after login
+I0530 13:10:39.541883 15337 manager.go:941] Reloading system slash commands
+I0530 13:10:39.588124 15337 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0530 13:10:39.595490 15337 manager.go:945] Slash commands unchanged, skipping update
+I0530 13:10:39.652567 15337 experiment_manager.go:39] Experiments refreshed after login
+I0530 13:10:39.652712 15337 manager.go:941] Reloading system slash commands
+I0530 13:10:39.656593 15337 manager.go:945] Slash commands unchanged, skipping update
+I0530 13:10:39.881894 15337 input_loop.go:499] Auth done received, triggering experiment refresh
+I0530 13:10:39.882010 15337 experiment_manager.go:35] Starting experiment refresh after login
+I0530 13:10:40.118111 15337 experiment_manager.go:39] Experiments refreshed after login
+I0530 13:10:40.118253 15337 manager.go:941] Reloading system slash commands
+I0530 13:10:40.124459 15337 manager.go:945] Slash commands unchanged, skipping update
+I0530 13:10:40.136568 15337 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x6d38ecf446c8fdaa
+I0530 13:10:42.495971 15337 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x93ac7023622cf2d8
+I0530 13:11:08.865809 15337 text_drip.go:173] Drip stopped: lastStepIdx=12, charIdx=4718, length=4718
+I0530 13:11:08.878624 15337 manager.go:459] CLI store manager shutting down
+I0530 13:11:08.879306 15337 conversation_manager.go:346] Stopping conversation stream
+I0530 13:11:08.879523 15337 server.go:2186] Language server shutting down

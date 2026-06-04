@@ -1,0 +1,158 @@
+I0603 12:24:24.564497 44632 server.go:1292] Starting language server process with pid 44632
+I0603 12:24:24.565262 44632 server.go:475] Language server will attempt to listen on host localhost
+I0603 12:24:24.566043 44632 server.go:489] Language server listening on random port at 54948 for HTTPS (gRPC)
+I0603 12:24:24.566280 44632 server.go:496] Language server listening on random port at 54949 for HTTP
+W0603 12:24:24.717973 44632 launchmanager.go:69] Entering local chrome mode! This is WRONG unless you are running tests or in eval mode on Linux.
+I0603 12:24:24.720375 44632 manager.go:92] Creating trajectory store manager with proto store and SQLite store
+E0603 12:24:24.721553 44632 log.go:398] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+W0603 12:24:24.721955 44632 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0603 12:24:24.721977 44632 log_context.go:117] Cache(availableModels): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0603 12:24:24.722007 44632 log.go:398] Failed to poll FetchAvailableModels: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I0603 12:24:24.722201 44632 server.go:2267] Auth succeeded, refreshing features and managers
+E0603 12:24:24.722275 44632 log.go:398] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+W0603 12:24:24.722457 44632 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0603 12:24:24.722547 44632 log_context.go:117] Cache(availableModels): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0603 12:24:24.722569 44632 log.go:398] Failed to poll FetchAvailableModels: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I0603 12:24:24.722771 44632 server.go:2273] State refresh took 0ms
+I0603 12:24:24.727615 44632 server.go:1928] initialized server successfully in 162.984084ms
+I0603 12:24:24.728464 44632 auto_updater.go:207] Last check was less than 15 minutes ago, skipping update
+I0603 12:24:24.728587 44632 common.go:104] Launching CLI mode
+E0603 12:24:24.728673 44632 common.go:123] Failed to resolve GeminiDir ".gemini": .gemini must be an absolute path: path is not absolute, falling back to default
+W0603 12:24:24.728860 44632 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0603 12:24:24.728906 44632 log_context.go:117] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0603 12:24:24.728930 44632 server.go:608] Failed to get OAuth token: error getting token source from auth provider: You are not logged into Antigravity.
+W0603 12:24:24.728957 44632 client.go:81] failed to set auth token
+I0603 12:24:24.731639 44632 common.go:154] CLI app data directory: /Users/amirfish/.gemini/antigravity-cli
+I0603 12:24:24.731686 44632 server.go:211] Creating CLI server backend: product=antigravity workspaceDirs=[/Users/amirfish/Apps/video-claw /Users/amirfish/Apps/video-claw] appDataDir=/Users/amirfish/.gemini/antigravity-cli cascadeManager=true codeAssist=true
+I0603 12:24:24.767587 44632 server.go:1970] GetConversationDetail: found conversation e1253fe9-8a5b-4081-adc4-4544db4a332d in memory or locally
+I0603 12:24:24.773279 44632 common.go:262] project: resuming conversation belonging to project ID: 49b9f0a7-4ee6-4eff-8e83-1de6728a6bf9
+I0603 12:24:24.773689 44632 common.go:282] project: synced active project to "/Users/amirfish/Apps/video-claw" (id=49b9f0a7-4ee6-4eff-8e83-1de6728a6bf9) from resumed conversation
+I0603 12:24:24.773717 44632 server.go:1337] Backend project ID updated dynamically to: 49b9f0a7-4ee6-4eff-8e83-1de6728a6bf9
+E0603 12:24:24.773776 44632 common.go:326] project: failed to add project resource folder "/Users/amirfish/Apps/video-claw" to workspace: uri: file:///Users/amirfish/Apps/video-claw: path is already tracked
+I0603 12:24:24.773808 44632 printmode.go:71] Print mode: starting (promptLength=4, model="", conversationID="e1253fe9-8a5b-4081-adc4-4544db4a332d")
+I0603 12:24:24.773830 44632 manager.go:257] Initializing CLI store manager for workspace /Users/amirfish/Apps/video-claw
+I0603 12:24:24.774533 44632 cli_setting_manager.go:626] Skipping telemetry propagation because user is not logged in
+I0603 12:24:24.774547 44632 cli_setting_manager.go:66] CLI settings initialized: permissions=&{Allow:[command(pwd) command(open)] Deny:[] Ask:[]}, toolPermission=always-proceed
+I0603 12:24:24.774783 44632 manager.go:350] CLI store manager initialized successfully
+I0603 12:24:24.774805 44632 printmode.go:164] Print mode: not authenticated, trying silent auth
+I0603 12:24:24.977349 44632 auth.go:114] ChainedAuth: authenticated via keyring (effective: keyring)
+I0603 12:24:24.977440 44632 server_oauth.go:212] applyAuthResult: email=amir.fish@gmail.com, authMethod=consumer, quotaProject=
+I0603 12:24:24.977456 44632 server_oauth.go:217] OAuth: authenticated successfully as amir.fish@gmail.com
+I0603 12:24:24.977463 44632 server_oauth.go:223] b.codeAssistClient.AuthProvider (0x2bb032660c80) is same as b.cliAuth (0x2bb032660c80)
+I0603 12:24:25.668421 44632 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x149edc1c206a0975
+I0603 12:24:25.787390 44632 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: 0x13756e8cac08c136
+I0603 12:24:25.793632 44632 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0603 12:24:26.041999 44632 printmode.go:166] Print mode: silent auth succeeded
+I0603 12:24:26.042047 44632 printmode.go:125] Print mode: resuming conversation e1253fe9-8a5b-4081-adc4-4544db4a332d
+I0603 12:24:26.042073 44632 input_loop.go:499] Auth done received, triggering experiment refresh
+I0603 12:24:26.042112 44632 conversation_manager.go:471] Streaming conversation e1253fe9-8a5b-4081-adc4-4544db4a332d
+I0603 12:24:26.042149 44632 experiment_manager.go:35] Starting experiment refresh after login
+I0603 12:24:26.043840 44632 server.go:774] Starting conversation update stream for e1253fe9-8a5b-4081-adc4-4544db4a332d
+I0603 12:24:26.043875 44632 printmode.go:130] Print mode: conversation=e1253fe9-8a5b-4081-adc4-4544db4a332d, sending message
+I0603 12:24:26.151718 44632 experiment_manager.go:39] Experiments refreshed after login
+I0603 12:24:26.151828 44632 manager.go:975] Reloading system slash commands
+I0603 12:24:26.151856 44632 conversation_manager.go:414] Forwarding user message to conversation e1253fe9-8a5b-4081-adc4-4544db4a332d (items=1, media=0)
+I0603 12:24:26.151875 44632 server.go:1075] Sending user message to conversation e1253fe9-8a5b-4081-adc4-4544db4a332d (items=1, media=0)
+I0603 12:24:26.155698 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155710 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155715 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155718 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155722 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155725 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155729 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155733 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155736 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155751 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155761 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155767 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155772 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155778 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155783 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155788 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155794 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155798 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155803 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155809 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155814 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155821 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155826 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155833 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155840 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155846 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155853 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155858 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155863 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155868 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155873 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155878 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155883 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155891 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155897 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155902 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155907 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155912 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155917 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155922 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155927 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155932 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155937 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155941 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155946 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155951 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155956 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155961 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155971 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155976 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155981 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155986 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.155991 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156001 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156007 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156012 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156017 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156024 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156030 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156035 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156040 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156045 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156050 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156055 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156060 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156065 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156070 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156075 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156080 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156089 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156094 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156100 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156105 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156110 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156116 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156121 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.156126 44632 printmode_manager.go:90] PlannerResponse without ModifiedResponse encountered
+I0603 12:24:26.721661 44632 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x924e1a674c5c270a
+I0603 12:24:27.261367 44632 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x3fe3cb56b4f336c9
+I0603 12:24:27.415283 44632 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0603 12:24:27.415403 44632 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0603 12:24:27.723799 44632 input_loop.go:499] Auth done received, triggering experiment refresh
+I0603 12:24:27.723827 44632 input_loop.go:499] Auth done received, triggering experiment refresh
+I0603 12:24:27.723836 44632 experiment_manager.go:35] Starting experiment refresh after login
+I0603 12:24:27.723869 44632 experiment_manager.go:35] Starting experiment refresh after login
+I0603 12:24:27.783003 44632 experiment_manager.go:39] Experiments refreshed after login
+I0603 12:24:27.783121 44632 manager.go:975] Reloading system slash commands
+I0603 12:24:27.784159 44632 manager.go:979] Slash commands unchanged, skipping update
+I0603 12:24:27.865389 44632 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.1 Pro (High)"
+I0603 12:24:27.886958 44632 experiment_manager.go:39] Experiments refreshed after login
+I0603 12:24:27.887013 44632 manager.go:975] Reloading system slash commands
+I0603 12:24:27.887589 44632 manager.go:979] Slash commands unchanged, skipping update
+I0603 12:24:28.149905 44632 input_loop.go:499] Auth done received, triggering experiment refresh
+I0603 12:24:28.149939 44632 experiment_manager.go:35] Starting experiment refresh after login
+I0603 12:24:28.234880 44632 experiment_manager.go:39] Experiments refreshed after login
+I0603 12:24:28.234995 44632 manager.go:975] Reloading system slash commands
+I0603 12:24:28.236041 44632 manager.go:979] Slash commands unchanged, skipping update
+I0603 12:24:28.344450 44632 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xe3e672ed07668586
+I0603 12:24:30.654732 44632 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x2d5b20bf43bebed8
+I0603 12:24:31.446940 44632 text_drip.go:173] Drip stopped: lastStepIdx=195, charIdx=242, length=368
+I0603 12:24:31.567325 44632 manager.go:488] CLI store manager shutting down
+I0603 12:24:31.567753 44632 conversation_manager.go:439] Stopping conversation stream
+I0603 12:24:31.567984 44632 server.go:2174] Language server shutting down

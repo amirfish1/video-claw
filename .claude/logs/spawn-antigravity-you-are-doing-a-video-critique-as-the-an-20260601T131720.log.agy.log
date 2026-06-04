@@ -1,0 +1,122 @@
+I0601 13:17:20.340342 51898 server.go:1306] Starting language server process with pid 51898
+I0601 13:17:20.343654 51898 server.go:476] Language server will attempt to listen on host localhost
+I0601 13:17:20.345639 51898 server.go:490] Language server listening on random port at 64953 for HTTPS (gRPC)
+I0601 13:17:20.345788 51898 server.go:497] Language server listening on random port at 64954 for HTTP
+W0601 13:17:20.501815 51898 launchmanager.go:69] Entering local chrome mode! This is WRONG unless you are running tests or in eval mode on Linux.
+E0601 13:17:20.515812 51898 log.go:398] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+W0601 13:17:20.517831 51898 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0601 13:17:20.517889 51898 log_context.go:117] Cache(availableModels): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0601 13:17:20.517932 51898 log.go:398] Failed to poll FetchAvailableModels: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I0601 13:17:20.519505 51898 server.go:2274] Auth succeeded, refreshing features and managers
+E0601 13:17:20.519560 51898 log.go:398] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+W0601 13:17:20.519868 51898 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0601 13:17:20.519947 51898 log_context.go:117] Cache(availableModels): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0601 13:17:20.520151 51898 log.go:398] Failed to poll FetchAvailableModels: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I0601 13:17:20.520604 51898 server.go:2280] State refresh took 1ms
+I0601 13:17:20.538324 51898 server.go:1938] initialized server successfully in 197.257958ms
+W0601 13:17:20.539623 51898 log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W0601 13:17:20.539650 51898 log_context.go:117] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E0601 13:17:20.539690 51898 server.go:609] Failed to get OAuth token: error getting token source from auth provider: You are not logged into Antigravity.
+W0601 13:17:20.540127 51898 client.go:81] failed to set auth token
+I0601 13:17:20.543117 51898 auto_updater.go:253] Spawned background update process with PID 51901
+I0601 13:17:20.543400 51898 common.go:103] Launching CLI mode
+I0601 13:17:20.548607 51898 project.go:58] project: discovered project "/Users/amirfish" (id=ea535175-8cbc-4de2-afef-34a13ff3d560) via /Users/amirfish/.antigravitycli
+I0601 13:17:20.548641 51898 common.go:156] project: using project "/Users/amirfish" (id=ea535175-8cbc-4de2-afef-34a13ff3d560) at /Users/amirfish/.gemini/config/projects/ea535175-8cbc-4de2-afef-34a13ff3d560.json
+E0601 13:17:20.548659 51898 common.go:194] Failed to resolve GeminiDir ".gemini": .gemini must be an absolute path: path is not absolute, falling back to default
+I0601 13:17:20.548677 51898 common.go:203] CLI app data directory: /Users/amirfish/.gemini/antigravity-cli
+I0601 13:17:20.549292 51898 server.go:207] Creating CLI server backend: product=antigravity workspaceDirs=[] appDataDir=/Users/amirfish/.gemini/antigravity-cli cascadeManager=true codeAssist=true
+W0601 13:17:20.550414 51898 common.go:246] Conversation ca10d25a-121b-4d90-bd3c-705516c521b2 not found, ignoring --conversation flag
+I0601 13:17:20.550743 51898 printmode.go:71] Print mode: starting (promptLength=1457, model="", conversationID="")
+I0601 13:17:20.551809 51898 manager.go:250] Initializing CLI store manager for workspace /Users/amirfish/Apps/video-claw
+I0601 13:17:20.554187 51898 cli_setting_manager.go:626] Skipping telemetry propagation because user is not logged in
+I0601 13:17:20.554323 51898 cli_setting_manager.go:66] CLI settings initialized: permissions=&{Allow:[command(pwd) command(open)] Deny:[] Ask:[]}, toolPermission=always-proceed
+I0601 13:17:20.555941 51898 manager.go:321] CLI store manager initialized successfully
+I0601 13:17:20.555975 51898 printmode.go:164] Print mode: not authenticated, trying silent auth
+I0601 13:17:20.754449 51898 auth.go:114] ChainedAuth: authenticated via keyring (effective: keyring)
+I0601 13:17:20.754658 51898 server_oauth.go:212] applyAuthResult: email=amir.fish@gmail.com, authMethod=consumer, quotaProject=
+I0601 13:17:20.754678 51898 server_oauth.go:217] OAuth: authenticated successfully as amir.fish@gmail.com
+I0601 13:17:20.754685 51898 server_oauth.go:223] b.codeAssistClient.AuthProvider (0x19799f0b0c80) is same as b.cliAuth (0x19799f0b0c80)
+I0601 13:17:21.615360 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x70f3a19d18e2d672
+I0601 13:17:22.042144 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: 0x3d228e7776c293fc
+I0601 13:17:22.044978 51898 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.5 Flash (High)"
+I0601 13:17:22.293509 51898 printmode.go:166] Print mode: silent auth succeeded
+I0601 13:17:22.293551 51898 input_loop.go:499] Auth done received, triggering experiment refresh
+I0601 13:17:22.293595 51898 experiment_manager.go:35] Starting experiment refresh after login
+I0601 13:17:22.477383 51898 experiment_manager.go:39] Experiments refreshed after login
+I0601 13:17:22.477516 51898 manager.go:941] Reloading system slash commands
+I0601 13:17:22.477555 51898 conversation_manager.go:284] Starting new conversation (agent=false)
+I0601 13:17:22.477586 51898 server.go:726] Creating new cascade trajectory (agentScript=false)
+I0601 13:17:22.477597 51898 server.go:734] Conversation using project ID: ea535175-8cbc-4de2-afef-34a13ff3d560
+I0601 13:17:22.480905 51898 server.go:755] Created conversation 39ed7e32-d946-4dc7-afd3-00948c633d74
+I0601 13:17:22.483290 51898 conversation_manager.go:378] Streaming conversation 39ed7e32-d946-4dc7-afd3-00948c633d74
+I0601 13:17:22.483568 51898 server.go:774] Starting conversation update stream for 39ed7e32-d946-4dc7-afd3-00948c633d74
+I0601 13:17:22.483612 51898 printmode.go:130] Print mode: conversation=39ed7e32-d946-4dc7-afd3-00948c633d74, sending message
+I0601 13:17:22.483627 51898 conversation_manager.go:321] Forwarding user message to conversation 39ed7e32-d946-4dc7-afd3-00948c633d74 (items=1, media=0)
+I0601 13:17:22.483635 51898 server.go:1083] Sending user message to conversation 39ed7e32-d946-4dc7-afd3-00948c633d74 (items=1, media=0)
+E0601 13:17:22.493287 51898 discovery.go:383] Failed to load JSON config file /Users/amirfish/.gemini/config/mcp_config.json: unexpected end of JSON input
+I0601 13:17:23.087392 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xc2a9d62c4634fd45
+I0601 13:17:23.512423 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x9d9a06fbdcd23262
+I0601 13:17:23.581052 51898 text_drip.go:173] Drip stopped: lastStepIdx=2, charIdx=48, length=107
+I0601 13:17:23.831174 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xc4d1905ec6cac535
+I0601 13:17:23.997861 51898 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.5 Flash (High)"
+I0601 13:17:23.998050 51898 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.5 Flash (High)"
+I0601 13:17:24.254961 51898 input_loop.go:499] Auth done received, triggering experiment refresh
+I0601 13:17:24.255088 51898 experiment_manager.go:35] Starting experiment refresh after login
+I0601 13:17:24.287424 51898 input_loop.go:499] Auth done received, triggering experiment refresh
+I0601 13:17:24.287547 51898 experiment_manager.go:35] Starting experiment refresh after login
+I0601 13:17:24.368253 51898 model_config_manager.go:157] Propagating selected model override to backend: label="Gemini 3.5 Flash (High)"
+I0601 13:17:24.414832 51898 experiment_manager.go:39] Experiments refreshed after login
+I0601 13:17:24.415085 51898 manager.go:941] Reloading system slash commands
+I0601 13:17:24.422130 51898 manager.go:945] Slash commands unchanged, skipping update
+I0601 13:17:24.462925 51898 experiment_manager.go:39] Experiments refreshed after login
+I0601 13:17:24.463035 51898 manager.go:941] Reloading system slash commands
+I0601 13:17:24.467726 51898 manager.go:945] Slash commands unchanged, skipping update
+I0601 13:17:24.629935 51898 input_loop.go:499] Auth done received, triggering experiment refresh
+I0601 13:17:24.630040 51898 experiment_manager.go:35] Starting experiment refresh after login
+I0601 13:17:24.686320 51898 experiment_manager.go:39] Experiments refreshed after login
+I0601 13:17:24.686461 51898 manager.go:941] Reloading system slash commands
+I0601 13:17:24.691117 51898 manager.go:945] Slash commands unchanged, skipping update
+I0601 13:17:25.011066 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xc63eb2cfb667ab9
+I0601 13:17:25.326376 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x69b7d0d0f6d24099
+E0601 13:17:25.347024 51898 log.go:398] checkpoint model generated tool calls
+I0601 13:17:26.457122 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x311faae4e4bc28c7
+I0601 13:17:26.529868 51898 text_drip.go:173] Drip stopped: lastStepIdx=5, charIdx=48, length=87
+I0601 13:17:27.900107 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe21d3099ef734a7f
+I0601 13:17:27.980185 51898 text_drip.go:173] Drip stopped: lastStepIdx=7, charIdx=48, length=64
+I0601 13:17:29.423655 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x6475622fb20d2389
+I0601 13:17:29.530131 51898 text_drip.go:173] Drip stopped: lastStepIdx=9, charIdx=58, length=58
+I0601 13:17:31.158477 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x8e39366a8285e6b8
+I0601 13:17:31.232307 51898 text_drip.go:173] Drip stopped: lastStepIdx=11, charIdx=24, length=24
+I0601 13:17:33.628692 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x8e170c117ac692e0
+I0601 13:17:33.679965 51898 text_drip.go:173] Drip stopped: lastStepIdx=13, charIdx=24, length=24
+I0601 13:17:35.957793 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb7e56ee09fd73a18
+I0601 13:17:36.080214 51898 text_drip.go:173] Drip stopped: lastStepIdx=15, charIdx=24, length=24
+I0601 13:17:38.690623 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x81277d03848e195c
+I0601 13:17:38.780921 51898 text_drip.go:173] Drip stopped: lastStepIdx=17, charIdx=48, length=63
+I0601 13:17:41.227136 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xa25a91e256c9473
+I0601 13:17:41.330188 51898 text_drip.go:173] Drip stopped: lastStepIdx=19, charIdx=24, length=24
+I0601 13:17:44.399305 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb3892fc86773715b
+I0601 13:17:44.480021 51898 text_drip.go:173] Drip stopped: lastStepIdx=21, charIdx=24, length=24
+I0601 13:17:47.539453 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x5ec7cca8116c42bd
+I0601 13:17:47.630116 51898 text_drip.go:173] Drip stopped: lastStepIdx=23, charIdx=24, length=24
+I0601 13:17:51.847359 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x8df25cb51d38bdce
+I0601 13:17:51.932314 51898 text_drip.go:173] Drip stopped: lastStepIdx=25, charIdx=24, length=24
+I0601 13:17:55.089167 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb24c55d25e7cab9
+I0601 13:17:55.180054 51898 text_drip.go:173] Drip stopped: lastStepIdx=27, charIdx=31, length=31
+I0601 13:18:00.582810 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x42a3cbb98edc99f0
+I0601 13:18:00.680579 51898 text_drip.go:173] Drip stopped: lastStepIdx=29, charIdx=24, length=24
+I0601 13:18:04.490932 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xdfb51bcf74a1ca75
+I0601 13:18:04.580225 51898 text_drip.go:173] Drip stopped: lastStepIdx=31, charIdx=24, length=24
+I0601 13:18:10.241795 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x5b9fe2cb4c3ab1eb
+I0601 13:18:10.330225 51898 text_drip.go:173] Drip stopped: lastStepIdx=33, charIdx=36, length=36
+I0601 13:18:14.071395 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x8b37de447d8c9d78
+I0601 13:18:14.180448 51898 text_drip.go:173] Drip stopped: lastStepIdx=35, charIdx=24, length=24
+I0601 13:18:20.338817 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xdf22b7644a612994
+I0601 13:18:20.480388 51898 text_drip.go:173] Drip stopped: lastStepIdx=37, charIdx=32, length=32
+I0601 13:18:26.429273 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd21b33d23359d01e
+I0601 13:18:26.530551 51898 text_drip.go:173] Drip stopped: lastStepIdx=39, charIdx=24, length=24
+I0601 13:18:32.180905 51898 http_helpers.go:182] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x181bfa3bd8951622
+I0601 13:18:39.247047 51898 text_drip.go:173] Drip stopped: lastStepIdx=41, charIdx=528, length=1418
+I0601 13:18:39.309631 51898 manager.go:459] CLI store manager shutting down
+I0601 13:18:39.310318 51898 conversation_manager.go:346] Stopping conversation stream
+I0601 13:18:39.310646 51898 server.go:2186] Language server shutting down

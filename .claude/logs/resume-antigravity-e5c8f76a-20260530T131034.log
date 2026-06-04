@@ -1,0 +1,40 @@
+**Strengths:**
+1. **Thematic Brilliance:** The "Severance-adjacent" aesthetic with color-coded AI tribes perfectly physicalizes the abstract CCC orchestration layer.
+2. **Pragmatic Phasing:** Scaffolding the narrative locally via zero-cost TTS and Ken Burns stills (Phase 1) locks pacing before spending cycles on expensive generative motion.
+
+**Execution Risks (The Plan):**
+1. **Audio Truncation via `-shortest`:** The final ffmpeg command applies `-shortest`. Since `amix` ends when its longest input ends (the final TTS line at 49s), the video will abruptly chop off right after the last spoken word, killing Shot 10's 7-second visual tail.
+2. **`amix` Timing Collapse:** You combine `adelay` tracks via `amix` without a continuous base silent audio track. `amix` can behave unpredictably with delayed, sparse inputs; the timeline may collapse. Anchor the mix with a full-duration silent audio track.
+3. **`zoompan` Jitter:** Step-based `zoompan` expressions (e.g., `max(zoom-0.0006,1.0)`) often produce integer-rounding micro-stutters. Using an explicit framerate definition before zoompan or smoothing with `minterpolate` yields much cleaner cinematic pans.
+
+**Bold Design Ideas:**
+1. **The "Artifact":** Instead of a standard tablet, have the agents physically review and pass a glowing, semi-transparent datastick representing the code payload moving through the CCC pipeline.
+2. **The VP Reveal:** In the final pull-back, show the VP's silhouette reflecting a scrolling terminal on the glass—blurring the line between the human founder and the orchestration engine itself.
+
+– Antigravity
+Here is a comprehensive breakdown of the remaining gaps, execution risks, and design opportunities in the plan and spec. 
+
+### 1. FFmpeg Pipeline & Execution Flaws
+The `review_room_assemble.py` script has several technical oversights that will cause the render to fail, desync, or look amateurish:
+
+*   **"Crossfades" vs. Dip-to-Black:** The design spec calls for "crossfade transitions." However, the Python script uses the `concat` demuxer alongside `fade=t=in` and `fade=t=out` on individual clips. This does **not** create a crossfade; it creates a harsh **dip-to-black** between every single shot. 
+    *   *Fix:* Either update the spec to accept hard-cuts/dips-to-black, or rewrite the ffmpeg script to use the `-filter_complex xfade` filter for true overlapping crossfades.
+*   **Cropping from the Top-Left:** In your `ken_burns` function, you use `scale=3840:2160:force_original_aspect_ratio=increase,crop=3840:2160`. By default, `crop` anchors to the top-left `(0,0)`. If Nano Banana generates an image that is slightly taller or wider than 16:9, this will awkwardly chop off the bottom or right side of the image (often decapitating subjects). 
+    *   *Fix:* Center the crop: `crop=3840:2160:(in_w-out_w)/2:(in_h-out_h)/2`.
+*   **The `amix` Audio Collapse:** As mentioned in the initial review, `amix` requires an active stream to keep the timeline alive. If you feed it 6 sparse, delayed `[vomix]` tracks without a continuous base audio track, ffmpeg will likely collapse the timing or terminate early. 
+    *   *Fix:* Generate a 60-second silent audio track (`anullsrc`) and feed it into `amix` as input 0 to anchor the entire timeline.
+*   **Mismatching Framerates:** You enforce `-r 30` universally, but the real clip (`free-mode-demo.mp4`) might be `24fps` or `60fps`. Changing framerate on the fly in the `concat` pipeline without proper `fps` filtering can lead to dropped frames or audio desync in the final render.
+
+### 2. Python Script Logic Errors
+*   **The TTS Path Assuming Root:** `sys.path.insert(0, str(ROOT))` followed by `from video_claw.tts.macos import synthesize` assumes `video_claw` is a Python module sitting directly in the root directory. If `video_claw` is installed as a package, this is unnecessary. If it's a CLI tool, this import will fail.
+*   **Audio Peak Clipping:** In the audio `filter_complex`, you add `amix=inputs=6:normalize=0`. If you ever add overlapping audio (e.g., sound effects, ambient room tone, or music), `normalize=0` will cause severe clipping (audio distortion) when signals stack.
+*   **`zoompan` 4K Choke:** You are upscaling stills to 4K (`3840x2160`), cropping, and then passing them into `zoompan` before downscaling back to 1080p. `zoompan` is notoriously single-threaded and memory-heavy; feeding it 4K textures may cause ffmpeg to OOM (Out of Memory) or render extremely slowly. 
+
+### 3. Visual & Narrative Design Gaps
+*   **Jarring Immersion Break (Shot 5):** The spec calls for a "cinematic prestige-TV office drama." Hard-cutting from a moody, teal-and-amber volumetric Severance-style room directly into a clean, sterile macOS screen recording (the $0 mode demo) will completely shatter the illusion. 
+    *   *Fix for Phase 1:* At the very least, apply a subtle color grade, vignette, or slight 3D perspective tilt to the screen recording so it feels like it lives *inside* the cinematic universe, rather than looking like a YouTube tutorial interrupt.
+*   **Invisible Orchestration:** The script says "they review each other through an orchestration layer I built (CCC)." But visually, we just see people looking at a tablet. To make the "AI Agent" metaphor land, the orchestration layer needs a visual representation. 
+    *   *Fix:* Add floating terminal text, holographic UI elements, or connecting light trails between the agents to visually signify that they are communicating via code/APIs, not just standing in a room.
+*   **Tribe Ambiguity:** The spec relies solely on "shirt color and a bold chest emblem" to differentiate Claude, Gemini, and Codex. In a fast-paced 55s video with moody lighting, viewers will not catch this nuance. 
+    *   *Fix:* Give the tribes distinct behavioral or physical traits. For example, Codex agents might always be holding tablets, Claude agents might have a softer, warmer lighting motif, and Gemini agents might be surrounded by a blue volumetric haze.
+*   **Missing End Slate / CTA:** The video ends on a pull-back shot with the VO saying "This is how Ineed AI ships." On LinkedIn, videos auto-play and loop. If there is no final title card with the company logo and a Call-To-Action (e.g., a URL or "Try it now"), you are relying entirely on the user reading the caption, which kills conversion.

@@ -1,0 +1,11 @@
+Warning: conversation "5d6e2fc4-bf45-4fc7-9a00-3ade632c54e1" not found.
+Act 1 is convincingly human; the bustling studio, professional slide, and team interactions contain no early AI tells. However, the twist feels muted. The transition at t27s using abstract warehouse lights fails to visually represent "no team," and the founder's ending lacks a strong emotional punch to wrap the narrative.
+
+Clarity is broken by meta-leaks that ruin the premise of Kneaded.ai.
+
+Top 3 Frame Fixes:
+1. **t27s (Frame 9)**: Replace the abstract warehouse lightbulbs with a match-cut of the t06s debate room suddenly empty or dissolving into code/digital lines, immediately selling the "no team" revelation.
+2. **t30s (Frame 10)**: Redraw the orchestration diagram. Remove the software engineering references (front/back-end sessions) and the developer git repo (`amirfish1/command-center-claude`). Replace them with agency roles matching the marketing premise (e.g., "Copywriter Agent", "Audience Planner Agent").
+3. **t42s (Frame 14)**: Correct the slide overlay text. It currently displays template text for "video-claw" (a slide-to-video tool), breaking story continuity. Update it to reference Kneaded.ai's campaign generation (e.g., "AI presenter rendering slide deck").
+
+— Antigravity Engine
