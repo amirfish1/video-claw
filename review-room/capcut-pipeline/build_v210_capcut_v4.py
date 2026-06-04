@@ -92,6 +92,10 @@ def main():
     for name, start in (("hub", 26.0), ("debate", 30.0), ("meeting", 34.0)):
         cc("add-audio", str(proj), str(A210 / f"roomtone_{name}.wav"), start, 4.0, "--track-name", "room tone", "--volume", str(ROOM_TONE_VOL))
 
+    # captions: import our exact SRT (our text + timing) as a real subtitle track.
+    # NB: import-srt re-stamps draft_info.id; _finalize() restores it to the media-placeholder id.
+    cc("import-srt", str(proj), str(RAW / "v2.10_captions.srt"), "--track-name", "captions")
+
     _finalize(proj)
     r = subprocess.run([CC, "lint", str(proj), "-H"], capture_output=True, text=True)
     print("lint:", (r.stdout or r.stderr).strip())
@@ -100,7 +104,23 @@ def main():
 
 
 def _finalize(proj):
-    import uuid, copy
+    import uuid, copy, re
+    # 1) restore draft_info.id to the id the media placeholders use (import-srt/others
+    #    may have re-stamped it, which breaks ##_draftpath_placeholder_<id>_## resolution).
+    ph = None
+    for jf in proj.rglob("draft_info.json"):
+        d = json.load(open(jf))
+        if ph is None:
+            for cat in d.get("materials", {}).values():
+                for m in (cat or []):
+                    mm = re.search(r"placeholder_([0-9A-Fa-f-]+)_", str(m.get("path", "")))
+                    if mm:
+                        ph = mm.group(1); break
+                if ph:
+                    break
+        if ph and d.get("id") != ph:
+            d["id"] = ph
+            json.dump(d, open(jf, "w"), ensure_ascii=False)
     new_id = str(uuid.uuid4()).upper()
     mp = proj / "draft_meta_info.json"
     m = json.load(open(mp)); m.update({"draft_id": new_id, "draft_name": proj.name, "draft_fold_path": str(proj)})

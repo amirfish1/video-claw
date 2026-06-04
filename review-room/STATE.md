@@ -334,6 +334,11 @@ NOT committed yet (awaiting user OK).
    Fix in assembler: endcard beat 4→6s + last VO anchor 59.3→58.8; regenerated beats + vo_track
    (now 64.5s, final line ends 62.2 with full "AY" tail). Room tones bumped 0.4→1.0.
 KEY: `capcut-cli trim` sets the SOURCE window (offset+len) — the way to codify a clip/music crop.
+**CAPTIONS (06-03):** v4 now imports our exact SRT as a real subtitle track via
+`capcut-cli import-srt <proj> raw-export/v2.10_captions.srt --track-name captions` (13 cues, our text +
+timing — no whisper). GOTCHA: import-srt RE-STAMPS `draft_info.id`, breaking the media
+`##_draftpath_placeholder_<id>_##` paths → `_finalize()` now RESTORES `draft_info.id` to the
+placeholder id (robust to any id-restamping command). 3 lint warnings = caption lines >42 chars (cosmetic).
 
 **v3 — REVEAL ENTRY + USER-EDIT CODIFICATION (06-03):** project `v2.10-capcut-v3` via
 `review-room/capcut-pipeline/build_v210_capcut_v3.py`. Codifies the user's revisions read back from
