@@ -42,24 +42,32 @@ def build(room, live, kb):
 
 
 def build_hub_from_founder():
-    """Hub entry with a lead-in: founder reviewing -> dissolve -> bustling -> dissolve ->
-    empty hub. Smooths the sudden cut into the reveal (user: "another half a second of
-    the founder and then it would dissolve"). 3-input xfade chain. ~6.1s; used trimmed."""
+    """Hub entry: FREEZE the founder's last reviewing frame (continuous from beat_05) ~1.4s,
+    then dissolve -> bustling callback -> empty hub. (User: "make the dissolve taken from the
+    last frame of the founder reviewing — keep him frozen 1-2 seconds.") The frozen frame
+    matches beat_05's framing (founder_motion @ ~4.5s, zoom 1.12). ~5.1s; used trimmed to 4.5."""
     out = A / "reveal_hub_from_live.mp4"
+    frozen = A / "_frozen_founder_last.png"
+    # beat_05's last frame: founder_motion near its end, zoom-1.12 center framing
+    subprocess.run([FF, "-y", "-ss", "4.48", "-i", str(RR / "raw" / "founder_motion.mp4"),
+                    "-vf", "scale=2150:1209:force_original_aspect_ratio=increase,"
+                           "crop=1920:1080:(in_w-1920)/2:(in_h-1080)/2",
+                    "-frames:v", "1", str(frozen)], check=True)
     N = ("scale=1920:1080:force_original_aspect_ratio=increase,"
          "crop=1920:1080:(in_w-1920)/2:(in_h-1080)/2,setsar=1")
     def n(i, L):
         return f"[{i}:v]{N},trim=0:{L},setpts=PTS-STARTPTS,fps={FPS},format=yuv420p"
-    fc = (n(0, 1.6) + "[a];" + n(1, 2.2) + "[b];" + n(2, 4.5) + "[c];"
-          "[a][b]xfade=transition=fade:duration=0.6:offset=1.0[ab];"
-          "[ab][c]xfade=transition=fade:duration=0.8:offset=2.4,format=yuv420p[v]")
-    subprocess.run([FF, "-y", "-i", str(RR / "raw" / "founder_motion.mp4"),
+    # [0]=frozen founder (held), [1]=bustling callback, [2]=empty hub KB
+    fc = (n(0, 2.0) + "[a];" + n(1, 1.8) + "[b];" + n(2, 2.7) + "[c];"
+          "[a][b]xfade=transition=fade:duration=0.6:offset=1.4[ab];"
+          "[ab][c]xfade=transition=fade:duration=0.6:offset=2.6,format=yuv420p[v]")
+    subprocess.run([FF, "-y", "-loop", "1", "-t", "2.5", "-i", str(frozen),
                     "-i", str(RR / "raw" / "sample3_bustling_hub.mp4"),
                     "-i", str(A / "kenburns_hub.mp4"),
-                    "-filter_complex", fc, "-map", "[v]", "-t", "6.1", "-r", str(FPS),
+                    "-filter_complex", fc, "-map", "[v]", "-t", "5.1", "-r", str(FPS),
                     "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)],
                    check=True)
-    print("wrote", out, "(6.1s, founder->bustling->empty)")
+    print("wrote", out, "(5.1s, frozen founder -> bustling -> empty)")
 
 
 def main():

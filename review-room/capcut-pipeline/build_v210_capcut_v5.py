@@ -26,7 +26,7 @@ BEATS = RAW / "beats"
 STEMS = RR / "output" / "stems-v2.9.1"
 TPL = RR / "capcut-pipeline" / "template"
 DRAFTS = Path(os.path.expanduser("~/Movies/CapCut/User Data/Projects/com.lveditor.draft"))
-DEST = "v2.10-capcut-v5"
+DEST = os.environ.get("DEST", "v2.10-capcut-v5")   # override to build a fresh name (e.g. -v6)
 CC = shutil.which("capcut-cli") or "capcut-cli"
 
 VIDEO = [
