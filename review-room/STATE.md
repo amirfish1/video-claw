@@ -317,6 +317,23 @@ so swapping the new 62.4s master into 0603 would misalign; a clean v2.10 CapCut 
 Test artifacts (deletable): CapCut projects `0603-poc-swap`, `pipeline-test`; `output/poc-capcut/`.
 NOT committed yet (awaiting user OK).
 
+**v3 — REVEAL ENTRY + USER-EDIT CODIFICATION (06-03):** project `v2.10-capcut-v3` via
+`review-room/capcut-pipeline/build_v210_capcut_v3.py`. Codifies the user's revisions read back from
+their projects (see read_project below):
+- **Reveal entry (user task 1):** restored the v2.9.1/0603 "part 1→part 2" move — the LIVE bustling hub
+  dissolves into the EMPTY hub. Asset `review-room/v2.10/assets/reveal_hub_from_live.mp4` (5.8s, built by
+  `review-room/v2.10/build_reveal_entry.py` = live clip xfade into kenburns_hub; CFR fix: fps AFTER setpts
+  or xfade errors -22). Used as the hub room segment trimmed to 4.0s (reveal stays 12s, no downstream re-sync).
+- **Vibrant music (user edit):** music B enters EARLY at 35.5s with a ~2.8s FADE-IN (two volume keyframes)
+  leading into the diagram — was a hard cut at 38.
+- **Room tones louder:** 0.4 → 1.0 (user had cranked them to ~6–9 in v2; add-audio --volume caps at 1.0,
+  push higher via the `volume` cmd / JSON if wanted).
+- **DEBATE 0.5× slow-mo (user edit) NOT yet codified:** capcut-cli `speed` does NOT ripple downstream
+  (verified) → a clean slow-mo must be BAKED IN THE ASSEMBLER (re-renders vo_track in sync). Next step.
+KEY ARCH RULE: visual/timing changes that alter beat lengths (reveal entry, slow-mo) belong in the RENDER
+(assembler re-anchors VO automatically); mix/layout (music entrance, fades, room-tone levels, per-beat
+placement) belong in the CapCut build. Lint exit 0.
+
 **CAPCUT ROUND-TRIP READ + v2 ROOM FADES (06-03):**
 - `review-room/capcut-pipeline/read_project.py <proj>` — reads a CapCut project's EDIT into a structured
   summary (per segment: material, timeline/source ranges, speed, audio fade in/out, transitions,
