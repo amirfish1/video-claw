@@ -6,9 +6,9 @@ Over v4:
      leads with ~0.5s more founder, then dissolves to the bustling callback, then to the
      empty hub). Reveal block kept at 12s (hub 4.5 + debate 3.75 + meeting 3.75) so the
      VO/music/room-tone timing doesn't drift.
-  2) ENERGETIC MUSIC fixed: uses music_B_energetic.wav (crop + fade BAKED into the audio)
-     added plainly with NO volume keyframe — capcut-cli keyframes didn't ramp in CapCut,
-     so music B was effectively muted.
+  2) ENERGETIC MUSIC: cropped to source 6.133 (user's crop) via trim, NO fade keyframe and
+     NOT baked — the user adds the fade natively in CapCut (keeps flexibility). The earlier
+     capcut-cli volume keyframe didn't ramp in CapCut, which muted B; dropping it avoids that.
   3) CAPTION STYLE from the user's hand-styled cue applied to ALL captions: scale 0.48,
      lower-third (y -0.694), font size 13 (CapCut font), warm off-white + thin black
      stroke, UPPERCASE. (read back via read_project / draft_info.json.)
@@ -45,7 +45,7 @@ VIDEO = [
     (BEATS / "beat_10.mp4", 4.0, None),
     (BEATS / "beat_11.mp4", 6.0, None),
 ]
-MB_START = 35.5
+MB_START, MB_SRC, MB_DUR = 35.5, 6.133, 18.3   # energetic music: timeline start, source crop, length
 BASS_START, BASS_DUR, BASS_VOL = 25.3, 13.0, 0.55
 ROOM_TONE_VOL = 1.0
 
@@ -134,8 +134,11 @@ def main():
 
     cc("add-audio", str(proj), str(RAW / "v2.10_vo_track.m4a"), 0, round(dur(RAW / "v2.10_vo_track.m4a"), 3), "--track-name", "VO", "--volume", "1.0")
     cc("add-audio", str(proj), str(STEMS / "music_A_suspense.mp3"), 0, 26.0, "--track-name", "music", "--volume", "0.8")
-    # energetic music: BAKED crop+fade, no keyframe
-    cc("add-audio", str(proj), str(A210 / "music_B_energetic.wav"), MB_START, round(dur(A210 / "music_B_energetic.wav"), 3), "--track-name", "music", "--volume", "0.85")
+    # energetic music: cropped to source 6.133 (user's crop), NO fade/keyframe — user adds the
+    # fade natively in CapCut (keeps flexibility; capcut-cli volume keyframes don't ramp -> muted).
+    bseg = cc("add-audio", str(proj), str(STEMS / "music_B_triumph.mp3"), MB_START, MB_DUR, "--track-name", "music", "--volume", "0.85")
+    if bseg.get("segment_id"):
+        cc("trim", str(proj), bseg["segment_id"], MB_SRC, MB_DUR)
     cc("add-audio", str(proj), str(A210 / "reveal_bass.wav"), BASS_START, BASS_DUR, "--track-name", "bass", "--volume", str(BASS_VOL))
     for name, start in (("hub", 26.0), ("debate", 30.0), ("meeting", 34.0)):
         cc("add-audio", str(proj), str(A210 / f"roomtone_{name}.wav"), start, 4.0, "--track-name", "room tone", "--volume", str(ROOM_TONE_VOL))

@@ -340,10 +340,11 @@ KEY: `capcut-cli trim` sets the SOURCE window (offset+len) — the way to codify
    xfade(0.6) → bustling(2.2) → xfade(0.8) → empty hub (6.1s). Smooths the sudden cut into the reveal
    (user wanted ~0.5s more founder then a dissolve). Reveal block kept 12s: hub 4.5 + debate 3.75 +
    meeting 3.75 (no audio drift). Codified in `build_reveal_entry.py::build_hub_from_founder()`.
-2. **Energetic music FIX:** `music_B_energetic.wav` = music_B cropped to source 6.133 + 2.8s fade BAKED
-   into the audio (`build_music_energetic.py`); added plainly, NO volume keyframe. ROOT CAUSE of "couldn't
-   get energetic music to work": capcut-cli volume keyframes don't reliably ramp in CapCut → B sat at 0%.
-   (Real native fade = an audio_fade material, which capcut-cli v0.4 lacks; baking it sidesteps that.)
+2. **Energetic music:** music_B cropped to SOURCE 6.133 via trim, NO fade/keyframe (user: "if it's a
+   keyframe issue I'll deal with it — don't bake it, we need the flexibility"). User adds the fade natively
+   in CapCut. ROOT CAUSE of "couldn't get energetic music to work": capcut-cli volume keyframes don't ramp
+   in CapCut → B sat at 0% muted; dropping the keyframe fixes it. (`build_music_energetic.py` exists as an
+   unused utility if a baked version is ever wanted.)
 3. **Caption style** read back from the user's hand-styled v4 cue ("Open on the pain") → applied to ALL
    captions in v5 via `style_captions()`: scale 0.4804, transform.y -0.6940 (lower third), font_size 13
    (CapCut cached font id 7580216980498615553), color [0.867,0.871,0.808] + thin black stroke (0.06),
