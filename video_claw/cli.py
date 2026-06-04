@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from . import __version__
+from . import assets as assets_mod
 from . import config as cfg_mod
 from . import core
 from . import keys as keys_mod
@@ -356,6 +357,49 @@ def cmd_preview(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_fetch_asset(args: argparse.Namespace) -> int:
+    """Fetch one or more assets from programmatic sources into ./assets/.
+
+    Spec format: KIND:VALUE. Supported kinds:
+      gh:owner/repo       GitHub OG card (1200×600 PNG)
+      shot:https://...    Headless Chrome screenshot
+      readme:owner/repo   First image from the repo README (often a hero)
+      yt:VIDEO_ID         YouTube thumbnail (handles full URLs too)
+    """
+    project_dir = Path(args.project_dir).resolve()
+    assets_dir = project_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.list:
+        if not assets_dir.exists():
+            print(f"(no assets dir at {assets_dir})")
+            return 0
+        files = sorted(p for p in assets_dir.iterdir() if p.is_file())
+        if not files:
+            print(f"(empty: {assets_dir})")
+            return 0
+        for f in files:
+            size_kb = f.stat().st_size / 1024
+            print(f"  {f.name:40s} {size_kb:8.1f} KB")
+        return 0
+
+    if not args.specs:
+        print("error: provide one or more SPECs (e.g. 'gh:owner/repo'), or --list",
+              file=sys.stderr)
+        return 2
+
+    failures = 0
+    for spec in args.specs:
+        try:
+            path = assets_mod.dispatch(spec, assets_dir)
+            rel = path.relative_to(project_dir) if path.is_relative_to(project_dir) else path
+            print(f"  ✓ {spec}  →  {rel}")
+        except Exception as e:  # noqa: BLE001
+            print(f"  ✗ {spec}: {e}", file=sys.stderr)
+            failures += 1
+    return 0 if failures == 0 else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="video-claw",
@@ -423,6 +467,24 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     pr.set_defaults(func=cmd_render)
+
+    pfa = sub.add_parser(
+        "fetch-asset",
+        help="Download real product imagery (GitHub OG cards, screenshots, READMEs, YouTube thumbs) into ./assets/.",
+    )
+    pfa.add_argument(
+        "specs", nargs="*",
+        help="One or more KIND:VALUE specs (gh:owner/repo, shot:URL, readme:owner/repo, yt:VIDEO_ID).",
+    )
+    pfa.add_argument(
+        "--project-dir", default=".",
+        help="Project directory containing assets/ (default: .)",
+    )
+    pfa.add_argument(
+        "--list", action="store_true",
+        help="Show what's already in assets/ and exit.",
+    )
+    pfa.set_defaults(func=cmd_fetch_asset)
 
     pp = sub.add_parser("preview", help="Render slide PNGs and open the preview gate only.")
     pp.add_argument("project_dir", nargs="?", default=".")

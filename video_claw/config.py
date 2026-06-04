@@ -195,6 +195,16 @@ CONFIG = {
         "model": "eleven_turbo_v2_5",
         "speaking_rate": 1.0,
     },
+    # Static presenter avatar (independent of free mode).
+    # Uncomment to put a still circular Becky badge in the bottom-right of
+    # every slide while still using paid ElevenLabs / fal.ai elsewhere.
+    # Zero extra cost; ffmpeg composites the badge during stitch.
+    # "avatar": {
+    #     "static": True,        # turn the overlay on
+    #     "scope": "all",        # "all" | "intro" | "flagged"
+    #     "image": None,         # path rel. to project; falls back to bundled Becky
+    #     "diameter": 280,
+    # },
 }
 
 SLIDES = [

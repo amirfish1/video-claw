@@ -98,6 +98,34 @@ cd <project-name>
 This drops a `slides.py` (with `SLIDES = [...]` and `CONFIG = {...}`), three
 starter HTML slides under `slides/`, and the default `assets/avatar.png`.
 
+### Step 2b: Pull real assets (optional, recommended)
+
+Before authoring slides, populate `assets/` with the imagery the slides
+will reference. The `fetch-asset` subcommand wraps the programmatic
+sources documented in `references/assets.md`:
+
+```
+video-claw fetch-asset gh:owner/repo        # GitHub OG card → assets/gh_repo.png
+video-claw fetch-asset shot:https://...     # Chrome screenshot → assets/shot_<slug>.png
+video-claw fetch-asset readme:owner/repo    # First README image → assets/readme_repo.png
+video-claw fetch-asset yt:VIDEO_ID          # YouTube thumb → assets/yt_id.jpg
+video-claw fetch-asset --list               # show what's cached
+```
+
+You can pass multiple specs in one invocation. Examples:
+
+```
+video-claw fetch-asset \
+    gh:romiluz13/Memongo \
+    readme:romiluz13/Memongo \
+    shot:https://recall.alexgreenshpun.com \
+    yt:dQw4w9WgXcQ
+```
+
+**Caveat:** GitHub returns a generic fallback PNG for nonexistent repos
+rather than 404ing. If `fetch-asset gh:typo/wrong` reports success, glance
+at the saved file to confirm it's the real repo card.
+
 ### Step 3: Author slides.py
 
 `slides.py` is the source of truth. Narration text, slide types, lipsync
@@ -167,7 +195,18 @@ To bypass all caches: `FORCE_REGEN=1 video-claw render`.
 - **No em-dashes anywhere.** Not in narration, not in slide text, not in
   titles. Use comma, period, or colon. (Project owner's standing rule.)
 - **Real assets only.** No placeholder screenshots, no lorem-ipsum diagrams.
-  Ask the user for the actual thing.
+  **Try programmatic sources first** — GitHub OG cards, headless Chrome
+  screenshots of public sites, README hero images, YouTube thumbnails.
+  See `references/assets.md` for the full catalog. Only ask the user when
+  those fail.
+- **Visual variance ratio.** At least 1 image-bearing slide per 4 slides.
+  If a section runs >4 text-only slides in a row, the section is
+  "tired" — add a hero, screenshot, or split-layout slide to break it up.
+- **No curator's voice in narration or slide text.** Phrases like "killer
+  line", "the single biggest thing", "worth knowing", "your stack", "you
+  already did" reveal human ranking and break the auto-generated feel.
+  Exception: direct quotes from the source material. Default tone is
+  flat, factual, and observational — like a digest, not an editor's pick.
 - **Preview before TTS.** Never skip the preview gate. Costs nothing,
   catches typos, broken layouts, and missing assets before the meter runs.
 - **One thought per slide.** If you find yourself writing a second paragraph
@@ -197,13 +236,24 @@ Set `CONFIG["mode"] = "free"` for a render that costs nothing. It forces:
 Use it when the user says "make a *free* video", "no budget", or "$0". macOS
 only (Linux users keep ElevenLabs/Deepgram).
 
-### Provider selection (auto by default)
+### Static avatar without free mode (paid TTS + presenter badge)
 
-`tts.provider` defaults to `"auto"`: ElevenLabs if `ELEVENLABS_API_KEY` is set,
-else Deepgram if `DEEPGRAM_API_KEY` is set, else macOS local TTS (Mac only).
-Pin a provider explicitly to force it. Captions are always produced —
-word-aligned for ElevenLabs, estimated otherwise. So a brand-new user with no
-keys still gets a complete captioned video on a Mac; keys only raise quality.
+The static avatar overlay is decoupled from `mode = "free"`. Drop this
+block into `CONFIG` to keep ElevenLabs (or any paid TTS) while still
+getting Becky in the corner of every slide for $0 extra:
+
+```python
+"avatar": {
+    "static": True,        # turn the overlay on
+    "scope": "all",        # "all" | "intro" | "flagged"
+    "image": None,         # path rel. to project; falls back to bundled Becky
+    "diameter": 280,
+},
+```
+
+Use this when the user wants the "presenter feel" without the per-second
+fal.ai lipsync charge. The badge is composited at ffmpeg time, not
+animated; lips don't move.
 
 ## When things go wrong
 
@@ -228,4 +278,5 @@ See `references/troubleshooting.md` for the full failure-mode catalog.
 - README: project root
 - CLI help: `video-claw --help`, `video-claw <subcommand> --help`
 - Design tokens and layout patterns: `references/style.md`
+- Asset sourcing catalog: `references/assets.md`
 - Common error messages and fixes: `references/troubleshooting.md`

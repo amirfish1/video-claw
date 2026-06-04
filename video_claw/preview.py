@@ -30,7 +30,7 @@ import threading
 import time
 import webbrowser
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 
 DEFAULT_TTL_INTERACTIVE = 3600
@@ -272,38 +272,56 @@ def prompt_user(
         proc = _spawn_detached_server(out_dir, port, ttl)
         if proc is None:
             # Fall back to legacy in-process flow.
-            return _prompt_user_legacy(out_dir, idx_path)
+            return _prompt_user_legacy(out_dir, idx_path, slides=slides)
         url = f"http://127.0.0.1:{port}/{idx_path.name}"
-        # Copy-paste banner first so the URL is always visible.
-        bar = "=" * (len(url) + 18)
+        file_url = f"file://{idx_path.resolve()}"
+        # Copy-paste banner first so the URL is always visible. Show the
+        # file:// URL too — it survives any server lifecycle (abort, exit,
+        # crash) and the index references images by relative path, so it
+        # works identically as a fallback users can bookmark.
+        bar = "=" * (max(len(url), len(file_url)) + 18)
         print(bar)
         print(f"  preview at:  {url}")
+        print(f"  stable URL:  {file_url}")
         print(bar)
         _open_browser(url)
+        # Label the gate based on what will actually run. Lipsync is per-slide
+        # opt-in; if no slide sets `lipsync: True`, only ElevenLabs/Deepgram
+        # TTS will charge — fal.ai is not called. Naming the actual cost
+        # surface up front avoids the "wait, will this charge me $40?" pause.
+        has_lipsync = any(s.get("lipsync") for s in slides)
+        gate_label = "TTS + lipsync" if has_lipsync else "TTS"
         try:
-            ans = input("[preview] Proceed with TTS + lipsync? [y/N] ").strip().lower()
+            ans = input(f"[preview] Proceed with {gate_label}? [y/N] ").strip().lower()
         except (KeyboardInterrupt, EOFError):
             print()
             ans = ""
         if ans in ("y", "yes"):
             print(f"[preview] gate kept open at {url} for {_fmt_duration(ttl)} after confirm")
             return True
-        # On abort: kill the child so we don't leave a server behind for an
-        # aborted render — the user explicitly bailed.
-        with contextlib.suppress(Exception):
-            proc.terminate()
-        print("[preview] aborted by user.", file=sys.stderr)
+        # On abort: let the child server live out its TTL instead of killing
+        # it. The user bailed on TTS spend, not on looking at the preview —
+        # they likely want to keep inspecting / iterating. The file:// URL
+        # above is also always valid.
+        print(
+            f"[preview] aborted by user. http URL stays live for {_fmt_duration(ttl)}; "
+            f"file:// URL is permanent.",
+            file=sys.stderr,
+        )
         return False
 
     # ttl == 0 → legacy behavior: in-process server, killed on input return.
-    return _prompt_user_legacy(out_dir, idx_path)
+    return _prompt_user_legacy(out_dir, idx_path, slides=slides)
 
 
-def _prompt_user_legacy(out_dir: Path, idx_path: Path) -> bool:
+def _prompt_user_legacy(
+    out_dir: Path, idx_path: Path, *, slides: Optional[List[dict]] = None
+) -> bool:
     """Original behavior: in-process server, torn down the instant input returns.
 
     Used when `preview_ttl=0` (explicit opt-in to legacy) or when spawning the
-    detached child failed for some reason.
+    detached child failed for some reason. `slides` is optional so older
+    fallback callers still work; passing it enables the accurate gate label.
     """
     port = _free_port()
     handler = functools.partial(_QuietHandler, directory=str(out_dir))
@@ -321,8 +339,11 @@ def _prompt_user_legacy(out_dir: Path, idx_path: Path) -> bool:
         # Give the server a tick to spin up before opening the browser.
         time.sleep(0.2)
         _open_browser(url)
+        # Accurate label: lipsync only charges when at least one slide opts in.
+        has_lipsync = any(s.get("lipsync") for s in (slides or []))
+        gate_label = "TTS + lipsync" if has_lipsync else "TTS"
         try:
-            ans = input("[preview] Proceed with TTS + lipsync? [y/N] ").strip().lower()
+            ans = input(f"[preview] Proceed with {gate_label}? [y/N] ").strip().lower()
         except (KeyboardInterrupt, EOFError):
             print()
             ans = ""
