@@ -61,7 +61,7 @@ SHOTS = [
     {"id": "08",  "kind": "clip",      "src": A8 / "hero_chat.mp4", "dur": 5.4, "fin": True, "fout": True},
     {"id": "09",  "kind": "clip",      "src": A8 / "deck_montage.mp4", "dur": 5.0, "fin": True, "fout": True},
     {"id": "10",  "kind": "stillimg",  "src": F271 / "founder_labeled.png", "dur": 4, "motion": "in", "fin": False, "fout": False},
-    {"id": "11",  "kind": "endcard",   "src": A8 / "endcard.png", "dur": 4, "fin": True, "fout": True},
+    {"id": "11",  "kind": "endcard",   "src": A8 / "endcard.png", "dur": 6, "fin": True, "fout": True},  # +2s so the final "Kneaded A.I." finishes (was cutting the "AY" tail)
 ]
 
 VO_LINES = [
@@ -77,7 +77,7 @@ VO_LINES = [
     (44.7, "N", "The debate? A run of agents — drafting, arguing, converging.", "The debate was a run of agents."),
     (49.9, "N", "The presenter? The deck agent — generating concepts at machine speed.", "The presenter was the deck agent."),
     (54.8, "N", "Everyone here is an agent. Except the founder.", "Everyone here is an agent. Except the founder."),
-    (59.3, "N", "From brief to delivered — the same afternoon. That's Kneaded A.I.", None),
+    (58.8, "N", "From brief to delivered — the same afternoon. That's Kneaded A.I.", None),
 ]
 # v2.10: per-room ambience beds under the reveal (placed at each room's start, low gain).
 ROOM_TONES = [

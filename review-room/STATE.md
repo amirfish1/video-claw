@@ -317,6 +317,24 @@ so swapping the new 62.4s master into 0603 would misalign; a clean v2.10 CapCut 
 Test artifacts (deletable): CapCut projects `0603-poc-swap`, `pipeline-test`; `output/poc-capcut/`.
 NOT committed yet (awaiting user OK).
 
+**v4 — ROUND-2 FEEDBACK, ALL CODIFIED (06-03):** project `v2.10-capcut-v4` via
+`review-room/capcut-pipeline/build_v210_capcut_v4.py`. Film now ~64.4s.
+1. **Reveal dissolves for ALL 3 rooms** (live→empty), via `review-room/v2.10/build_reveal_entry.py`
+   (ROOMS list): hub=sample3_bustling_hub, debate=sample5_real_debate, meeting=**founder_motion**
+   (the founder review IS the meeting — same table as empty_meeting.png; 3 people vanish). Each clip
+   `reveal_<room>_from_live.mp4` = live (2.2s) xfade(0.9) into kenburns_<room>, used trimmed to 4.0s.
+2. **Music B crop:** user starts B at SOURCE 6.133s (not 0). Codified: add-audio then
+   `capcut-cli trim <seg> 6.133 18.3` → source_timerange [6.133, 24.433], timeline 35.5–53.8. + 2.8s
+   fade-in (volume keyframes). (Confirmed via read_project that trim sets the SOURCE window.)
+3. **Reveal sub-bass drone** (`review-room/v2.10/build_reveal_bass.py` → `reveal_bass.wav`, 13s ffmpeg
+   layered low sines 38/50/76Hz + pink-noise air + swell-in + tremolo) under the reveal (25.3–38.3,
+   vol 0.55) — fills the empty rooms (user: "feels empty... bass... especially the transition").
+4. Debate 0.5× slow-mo: SKIPPED (user said it was only a face/voice-match compromise; can re-add).
+5. **VO ending fixed:** final "Kneaded A.I." was cut (line@59.3 ran to ~63.3, vo_track ended 62.5).
+   Fix in assembler: endcard beat 4→6s + last VO anchor 59.3→58.8; regenerated beats + vo_track
+   (now 64.5s, final line ends 62.2 with full "AY" tail). Room tones bumped 0.4→1.0.
+KEY: `capcut-cli trim` sets the SOURCE window (offset+len) — the way to codify a clip/music crop.
+
 **v3 — REVEAL ENTRY + USER-EDIT CODIFICATION (06-03):** project `v2.10-capcut-v3` via
 `review-room/capcut-pipeline/build_v210_capcut_v3.py`. Codifies the user's revisions read back from
 their projects (see read_project below):
