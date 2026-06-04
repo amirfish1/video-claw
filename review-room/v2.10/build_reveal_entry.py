@@ -41,8 +41,32 @@ def build(room, live, kb):
     print("wrote", out, f"({total:.1f}s)")
 
 
+def build_hub_from_founder():
+    """Hub entry with a lead-in: founder reviewing -> dissolve -> bustling -> dissolve ->
+    empty hub. Smooths the sudden cut into the reveal (user: "another half a second of
+    the founder and then it would dissolve"). 3-input xfade chain. ~6.1s; used trimmed."""
+    out = A / "reveal_hub_from_live.mp4"
+    N = ("scale=1920:1080:force_original_aspect_ratio=increase,"
+         "crop=1920:1080:(in_w-1920)/2:(in_h-1080)/2,setsar=1")
+    def n(i, L):
+        return f"[{i}:v]{N},trim=0:{L},setpts=PTS-STARTPTS,fps={FPS},format=yuv420p"
+    fc = (n(0, 1.6) + "[a];" + n(1, 2.2) + "[b];" + n(2, 4.5) + "[c];"
+          "[a][b]xfade=transition=fade:duration=0.6:offset=1.0[ab];"
+          "[ab][c]xfade=transition=fade:duration=0.8:offset=2.4,format=yuv420p[v]")
+    subprocess.run([FF, "-y", "-i", str(RR / "raw" / "founder_motion.mp4"),
+                    "-i", str(RR / "raw" / "sample3_bustling_hub.mp4"),
+                    "-i", str(A / "kenburns_hub.mp4"),
+                    "-filter_complex", fc, "-map", "[v]", "-t", "6.1", "-r", str(FPS),
+                    "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)],
+                   check=True)
+    print("wrote", out, "(6.1s, founder->bustling->empty)")
+
+
 def main():
+    build_hub_from_founder()                 # hub: founder -> bustling -> empty
     for room, live, kb in ROOMS:
+        if room == "hub":
+            continue                          # hub built above (with founder lead-in)
         build(room, live, kb)
 
 

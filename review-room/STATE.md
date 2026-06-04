@@ -334,6 +334,21 @@ NOT committed yet (awaiting user OK).
    Fix in assembler: endcard beat 4→6s + last VO anchor 59.3→58.8; regenerated beats + vo_track
    (now 64.5s, final line ends 62.2 with full "AY" tail). Room tones bumped 0.4→1.0.
 KEY: `capcut-cli trim` sets the SOURCE window (offset+len) — the way to codify a clip/music crop.
+**v5 STAGED — round-3 feedback (06-03, NOT yet built; needs CapCut CLOSED to run):**
+`review-room/capcut-pipeline/build_v210_capcut_v5.py`. Assets already rendered (ffmpeg, safe):
+1. **Founder→bustling dissolve entry:** `reveal_hub_from_live.mp4` rebuilt as founder_motion(1.6) →
+   xfade(0.6) → bustling(2.2) → xfade(0.8) → empty hub (6.1s). Smooths the sudden cut into the reveal
+   (user wanted ~0.5s more founder then a dissolve). Reveal block kept 12s: hub 4.5 + debate 3.75 +
+   meeting 3.75 (no audio drift). Codified in `build_reveal_entry.py::build_hub_from_founder()`.
+2. **Energetic music FIX:** `music_B_energetic.wav` = music_B cropped to source 6.133 + 2.8s fade BAKED
+   into the audio (`build_music_energetic.py`); added plainly, NO volume keyframe. ROOT CAUSE of "couldn't
+   get energetic music to work": capcut-cli volume keyframes don't reliably ramp in CapCut → B sat at 0%.
+   (Real native fade = an audio_fade material, which capcut-cli v0.4 lacks; baking it sidesteps that.)
+3. **Caption style** read back from the user's hand-styled v4 cue ("Open on the pain") → applied to ALL
+   captions in v5 via `style_captions()`: scale 0.4804, transform.y -0.6940 (lower third), font_size 13
+   (CapCut cached font id 7580216980498615553), color [0.867,0.871,0.808] + thin black stroke (0.06),
+   UPPERCASE. (Default import-srt captions were huge/overflowing.)
+
 **CAPTIONS (06-03):** v4 now imports our exact SRT as a real subtitle track via
 `capcut-cli import-srt <proj> raw-export/v2.10_captions.srt --track-name captions` (13 cues, our text +
 timing — no whisper). GOTCHA: import-srt RE-STAMPS `draft_info.id`, breaking the media
