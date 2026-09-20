@@ -24,11 +24,5 @@ keys.env
 .env.local
 
 .DS_Store
-
-# Review Room film: ignore working MEDIA, but TRACK source (scripts + docs)
-review-room/**
-!review-room/**/
-!review-room/*.py
-!review-room/*.md
-!review-room/**/*.py
-!review-room/**/*.md
+.gstack/
+.claude/logs/
