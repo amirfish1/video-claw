@@ -234,6 +234,8 @@ def make_video(slides: List[Dict[str, Any]], *,
     captions_cfg = captions_cfg or {}
     if free:
         tts_cfg["provider"] = "macos"
+        tts_cfg["lipsync"] = False
+        slides = [{**slide, "lipsync": False} for slide in slides]
     narrations = [slide.get("narration") or "" for slide in slides]
     if not narrations:
         raise ValueError("No slides to render")

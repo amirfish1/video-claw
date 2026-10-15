@@ -21,10 +21,14 @@ def report(slides, tts_cfg, cache) -> dict:
     }
     hits = 0
     forced = _force_regen()
-    for slide in slides:
-        key, ext = tts.audio_cache_entry(slide["narration"], tts_cfg)
+    master = snapshot["settings"]["provider"] == "elevenlabs"
+    texts = [slide["narration"] for slide in slides]
+    if master:
+        texts = ["\n\n".join(text.strip() for text in texts)]
+    for text in texts:
+        key, ext = tts.audio_cache_entry(text, tts_cfg)
         hits += int(cache.path("tts", key, ext).is_file() and not forced)
-    misses = len(slides) - hits
+    misses = len(texts) - hits
     reasons = []
     if misses:
         previous = _load_snapshot(cache)
@@ -46,6 +50,8 @@ def report(slides, tts_cfg, cache) -> dict:
         if not reasons:
             reasons.append("matching audio missing; no recorded config/text change")
     suffix = f" ({'; '.join(reasons)})" if reasons else ""
+    if master:
+        suffix += f"; one master take across {len(slides)} slides"
     print(f"[tts cache] {hits} hits / {misses} misses before synthesis{suffix}", flush=True)
     return snapshot
 

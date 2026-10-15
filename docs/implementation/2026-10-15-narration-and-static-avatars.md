@@ -52,3 +52,19 @@ request and cache reuse, rate changes, validation before spend, final-segment
 extraction, caption offsets, static/fal routing, free-mode defaults, scaffold
 pacing, and video-slide overlay composition. A tiny real ffmpeg test decodes
 sliced synthetic audio; no paid API calls or production data are used.
+
+## Integration with concurrent diagnostics work
+
+Rebased on PR #12's spend/cache/headless-preview changes. The shared cache-key
+helper and diagnostics now use one cached ElevenLabs JSON response for the
+joined script, while preserving the other providers' cache keys. Estimates
+count master separators and use the renderer's effective static/fal/off mode.
+The preview gate still runs before the single master request, and aborted
+previews do not update the completed-render cache snapshot.
+
+Final targeted verification after integration: 140 pytest checks passed,
+including mocked-network synthesis, master-cache/spend diagnostics, preview
+ordering/headless forwarding, skill installation, scaffold defaults, and the
+real ffmpeg audio/overlay tests. The skill validator and `git diff --check`
+also passed. Existing per-slide ElevenLabs caches cannot preserve the new
+continuous take, so the first master render uses a new cache entry.

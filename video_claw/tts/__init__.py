@@ -55,10 +55,10 @@ def cache_settings(tts_cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def audio_cache_entry(text: str, tts_cfg: Dict[str, Any]) -> Tuple[list, str]:
-    """Shared by synthesis and diagnostics; preserve the existing cache keys."""
+    """Shared synthesis/diagnostic identity; ElevenLabs caches a master response."""
     cfg = cache_settings(tts_cfg)
     if cfg["provider"] == "elevenlabs":
-        return [text, "voice", cfg["voice_id"], "model", cfg["model"]], "mp3"
+        return ["elevenlabs-master-v1", text.strip(), cfg["voice_id"], cfg["model"]], "json"
     if cfg["provider"] == "deepgram":
         return [text, "deepgram", "voice", cfg["deepgram_voice"]], "mp3"
     return [text, "macos", "voice", cfg["macos_voice"]], "wav"
@@ -199,10 +199,8 @@ def make_audio_elevenlabs_master(narrations: list[str], *, workdir: Path,
         tmp.write_text(json.dumps(response))
         tmp.replace(out_path)
 
-    master_key = ["elevenlabs-master-v1", master_text,
-                  tts_cfg.get("voice_id", DEFAULT_TTS["voice_id"]),
-                  tts_cfg.get("model", DEFAULT_TTS["model"])]
-    cached_response = cache.run("tts", master_key, "json", _generate)
+    master_key, ext = audio_cache_entry(master_text, {**tts_cfg, "provider": "elevenlabs"})
+    cached_response = cache.run("tts", master_key, ext, _generate)
     response = json.loads(cached_response.read_text())
     chars, starts, ends = _validate_alignment(master_text, response.get("alignment") or {})
     master_mp3 = workdir / "narr_master.mp3"
