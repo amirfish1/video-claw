@@ -7,8 +7,8 @@ caption timing. Deepgram and macOS produce no word-level alignment;
 caption flow degrades to estimated timing.
 
 Caching is wired through `cache.run`:
-  - kind="tts" caches raw provider output (mp3 / wav / optional alignment sidecar)
-  - kind="m4a" caches the silenceremove+atempo m4a encode
+  - kind="tts" caches raw provider output (master JSON for ElevenLabs, mp3/wav otherwise)
+  - kind="m4a" caches aligned ElevenLabs slices, or silenceremove+atempo for other providers
 
 Voice defaults (DO NOT change without reading CLAUDE.md):
   ElevenLabs: cgSgspJ2msm6clMCkdW9  (Jessica)
@@ -18,6 +18,7 @@ Voice defaults (DO NOT change without reading CLAUDE.md):
 from __future__ import annotations
 import base64
 import json
+import math
 import platform
 import subprocess
 import urllib.error
@@ -91,69 +92,170 @@ def _encode_to_m4a(src: Path, dst: Path, rate: float) -> Path:
     return dst
 
 
-def make_audio_elevenlabs(text: str, idx: int, *, workdir: Path,
-                          cache, tts_cfg: Dict[str, Any]) -> Tuple[Path, float]:
-    """ElevenLabs /text-to-speech/{voice}/with-timestamps → m4a + alignment JSON.
-    Cached by (text, voice, model). m4a encode separately cached by (mp3, rate)."""
+def _request_elevenlabs(text: str, tts_cfg: Dict[str, Any]) -> dict:
+    """One timestamped request. Called only on a master-cache miss."""
     api_key = keys.get("ELEVENLABS_API_KEY")
     if not api_key:
         raise RuntimeError(
             "ElevenLabs requested but no ELEVENLABS_API_KEY found.\n"
             "Run: video-claw keys set EL=<your-key>"
         )
-
     voice_id = tts_cfg.get("voice_id", DEFAULT_TTS["voice_id"])
-    model = tts_cfg.get("model", DEFAULT_TTS["model"])
-    rate = float(tts_cfg.get("speaking_rate", DEFAULT_TTS["speaking_rate"]))
+    body = {
+        "text": text,
+        "model_id": tts_cfg.get("model", DEFAULT_TTS["model"]),
+        "voice_settings": {
+            "stability": 0.5, "similarity_boost": 0.75,
+            "style": 0.0, "use_speaker_boost": True,
+        },
+    }
+    req = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/with-timestamps",
+        data=json.dumps(body).encode(),
+        headers={"xi-api-key": api_key, "Content-Type": "application/json",
+                 "Accept": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        err = e.read().decode(errors="ignore")[:300]
+        raise RuntimeError(f"ElevenLabs error {e.code}: {err}") from e
+
+
+def _validate_alignment(text: str, alignment: dict) -> tuple[list, list, list]:
+    """Use original-text alignment, never normalized-text character offsets.
+
+    Fail explicitly if the provider cannot map the requested text. Guessing
+    offsets or retrying per slide could both corrupt speech and incur more cost.
+    """
+    chars = alignment.get("characters") or []
+    starts = alignment.get("character_start_times_seconds") or []
+    ends = alignment.get("character_end_times_seconds") or []
+    if (not chars or any(not isinstance(c, str) or len(c) != 1 for c in chars)
+            or "".join(chars) != text or len(starts) != len(chars)
+            or len(ends) != len(chars)):
+        raise ValueError("ElevenLabs alignment does not match the master narration")
+    try:
+        starts = [float(t) for t in starts]
+        ends = [float(t) for t in ends]
+    except (TypeError, ValueError) as e:
+        raise ValueError("ElevenLabs alignment has invalid timestamps") from e
+    if (any(not math.isfinite(s) or not math.isfinite(e) or s < 0 or e < s
+            for s, e in zip(starts, ends))
+            or any(b < a for a, b in zip(starts, starts[1:]))
+            or any(b < a for a, b in zip(ends, ends[1:]))):
+        raise ValueError("ElevenLabs alignment has invalid timestamps")
+    return chars, starts, ends
+
+
+def _tempo_filters(rate: float) -> list[str]:
+    # Chaining factors in [0.5, 2] also works with older ffmpeg versions.
+    filters = []
+    while rate < 0.5:
+        filters.append("atempo=0.5")
+        rate /= 0.5
+    while rate > 2:
+        filters.append("atempo=2")
+        rate /= 2
+    if rate != 1.0:
+        filters.append(f"atempo={rate}")
+    return filters
+
+
+def make_audio_elevenlabs_master(narrations: list[str], *, workdir: Path,
+                                 cache, tts_cfg: Dict[str, Any],
+                                 rates: list[float],
+                                 indices: list[int] | None = None) -> list[Tuple[Path, float]]:
+    """Synthesize the whole script once, then cut it on its original timeline.
+
+    Cache the response (audio AND alignment) atomically by text/voice/model.
+    Slice before atempo so different slide rates need no global correction;
+    segment duration is (end-start)/rate. Sidecars keep unsped, slide-local
+    timestamps for captions.py, which divides by that slide's rate exactly once.
+    No silenceremove and no ffprobe on the cut AAC files.
+    """
+    if not narrations or any(not isinstance(t, str) or not t.strip() for t in narrations):
+        raise ValueError("Every slide needs narration text")
+    rates = [float(rate) for rate in rates]
+    if len(rates) != len(narrations) or any(not math.isfinite(r) or r <= 0 for r in rates):
+        raise ValueError("Each slide needs a finite, positive speaking rate")
+    indices = list(range(len(narrations))) if indices is None else indices
+    if len(indices) != len(narrations):
+        raise ValueError("indices must match narrations")
+    texts = [t.strip() for t in narrations]
+    master_text = "\n\n".join(texts)
+    offsets = []
+    offset = 0
+    for text in texts:
+        offsets.append((offset, offset + len(text)))
+        offset += len(text) + 2
 
     def _generate(out_path: Path) -> None:
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/with-timestamps"
-        body = {
-            "text": text,
-            "model_id": model,
-            "voice_settings": {
-                "stability": 0.5, "similarity_boost": 0.75,
-                "style": 0.0, "use_speaker_boost": True,
-            },
+        response = _request_elevenlabs(master_text, tts_cfg)
+        # A complete response remains cached even if alignment validation fails:
+        # a rerun should not silently buy the same unusable audio again.
+        tmp = out_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(response))
+        tmp.replace(out_path)
+
+    master_key = ["elevenlabs-master-v1", master_text,
+                  tts_cfg.get("voice_id", DEFAULT_TTS["voice_id"]),
+                  tts_cfg.get("model", DEFAULT_TTS["model"])]
+    cached_response = cache.run("tts", master_key, "json", _generate)
+    response = json.loads(cached_response.read_text())
+    chars, starts, ends = _validate_alignment(master_text, response.get("alignment") or {})
+    master_mp3 = workdir / "narr_master.mp3"
+    master_mp3.write_bytes(base64.b64decode(response["audio_base64"], validate=True))
+    (workdir / "narr_master.alignment.json").write_text(json.dumps(response["alignment"]))
+
+    # Split separator pauses halfway. Adjacent segments are contiguous, and
+    # neither slide loses a spoken character. Preserve the initial lead-in.
+    boundaries = [0.0]
+    for (_, prev_end), (next_start, _) in zip(offsets, offsets[1:]):
+        if ends[prev_end - 1] > starts[next_start]:
+            raise ValueError("ElevenLabs alignment overlaps a slide boundary")
+        boundaries.append((ends[prev_end - 1] + starts[next_start]) / 2)
+    boundaries.append(ends[-1])
+    if any(b <= a for a, b in zip(boundaries, boundaries[1:])):
+        raise ValueError("ElevenLabs alignment gives an empty slide segment")
+
+    results = []
+    for idx, (char_start, char_end), rate, start, end in zip(
+            indices, offsets, rates, boundaries, boundaries[1:]):
+        def _slice(out_path: Path) -> None:
+            filters = [f"atrim=start={start}:end={end}", "asetpts=PTS-STARTPTS"]
+            filters.extend(_tempo_filters(rate))
+            tmp = out_path.with_suffix(".tmp.m4a")
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", str(master_mp3), "-vn",
+                 "-filter:a", ",".join(filters), "-c:a", "aac", "-b:a", "192k", str(tmp)],
+                check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            )
+            tmp.replace(out_path)
+
+        segment_key = [cached_response, "aligned-slice-v1", start, end, rate]
+        cached_m4a = cache.run("m4a", segment_key, "m4a", _slice)
+        target = workdir / f"narr_{idx:02d}.m4a"
+        target.write_bytes(cached_m4a.read_bytes())
+        local_alignment = {
+            "characters": chars[char_start:char_end],
+            "character_start_times_seconds": [t - start for t in starts[char_start:char_end]],
+            "character_end_times_seconds": [t - start for t in ends[char_start:char_end]],
         }
-        req = urllib.request.Request(
-            url, data=json.dumps(body).encode(),
-            headers={
-                "xi-api-key": api_key,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                res = json.load(r)
-        except urllib.error.HTTPError as e:
-            err = e.read().decode(errors="ignore")[:300]
-            raise RuntimeError(f"ElevenLabs error {e.code}: {err}")
-        out_path.write_bytes(base64.b64decode(res["audio_base64"]))
-        align_path = out_path.with_suffix(".alignment.json")
-        align_path.write_text(json.dumps(res.get("alignment") or {}))
+        (workdir / f"narr_{idx:02d}.alignment.json").write_text(json.dumps(local_alignment))
+        results.append((target, (end - start) / rate))
+    return results
 
-    tts_key, _ = audio_cache_entry(text, {**tts_cfg, "provider": "elevenlabs"})
-    cached_mp3 = cache.run("tts", tts_key, "mp3", _generate)
 
-    # Copy cached output to canonical per-slide paths used downstream.
-    target_mp3 = workdir / f"narr_{idx:02d}.mp3"
-    target_align = workdir / f"narr_{idx:02d}.alignment.json"
-    target_mp3.write_bytes(cached_mp3.read_bytes())
-    align_src = cached_mp3.with_suffix(".alignment.json")
-    if align_src.exists():
-        target_align.write_text(align_src.read_text())
-
-    m4a_key = [cached_mp3, "rate", round(rate, 4), "silenceremove", "0.25", "0.0"]
-
-    def _m4a_gen(out_path: Path) -> None:
-        _encode_to_m4a(target_mp3, out_path, rate=rate)
-
-    cached_m4a = cache.run("m4a", m4a_key, "m4a", _m4a_gen)
-    target_m4a = workdir / f"narr_{idx:02d}.m4a"
-    target_m4a.write_bytes(cached_m4a.read_bytes())
-    return target_m4a, _ffprobe_duration(target_m4a)
+def make_audio_elevenlabs(text: str, idx: int, *, workdir: Path,
+                          cache, tts_cfg: Dict[str, Any]) -> Tuple[Path, float]:
+    """Single-slide compatibility entrypoint with the same alignment guarantees."""
+    return make_audio_elevenlabs_master(
+        [text], workdir=workdir, cache=cache, tts_cfg=tts_cfg,
+        rates=[float(tts_cfg.get("speaking_rate", DEFAULT_TTS["speaking_rate"]))],
+        indices=[idx],
+    )[0]
 
 
 def make_audio_deepgram(text: str, idx: int, *, workdir: Path,

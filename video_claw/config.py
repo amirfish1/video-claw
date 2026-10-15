@@ -28,7 +28,7 @@ Slide schema:
   html/image/video: path relative to project dir
   narration:  string the TTS engine will speak
   title:      optional, drawn as a strip for image/video slides
-  lipsync:    optional bool, requires fal.ai key
+  lipsync:    False | True | "fal" | "static" (only True/"fal" use fal.ai)
   speed:      optional float override (default 1.0)
 """
 from __future__ import annotations
@@ -48,13 +48,14 @@ DEFAULT_CONFIG = {
         "voice_id": "cgSgspJ2msm6clMCkdW9",  # Jessica (matches CCC-outreach default)
         "model": "eleven_turbo_v2_5",
         "speaking_rate": 1.0,
+        "lipsync": False,  # default overlay mode; individual slides can override
         # Deepgram fallback voice if provider=deepgram
         "deepgram_voice": "aura-2-thalia-en",
         # macOS local voice; "auto" picks the best installed English voice
         "macos_voice": "auto",
     },
     "lipsync": {
-        "avatar": "assets/avatar.png",  # relative to project dir; only used on slides with lipsync=True
+        "avatar": "assets/avatar.png",  # relative to project dir; static or animated overlay
         "fal_omnihuman_version": "v1.5",
         "resolution": "720p",
     },
@@ -121,6 +122,7 @@ def _apply_free_mode(config: dict, slides: list) -> None:
     """
     tts = config.setdefault("tts", {})
     tts["provider"] = "macos"
+    tts["lipsync"] = False  # the free-mode avatar is configured separately below
     tts.setdefault("macos_voice", "auto")  # best installed voice; respects an explicit override
 
     for slide in slides:
@@ -213,25 +215,25 @@ SLIDES = [
         "html": "slides/intro.html",
         "narration": "Meet video-claw. A tiny tool that turns HTML slides into a narrated MP4.",
         "lipsync": True,    # uses assets/avatar.png; needs FAL_API_KEY
-        "speed": 1.15,
+        "speed": 1.0,
     },
     {
         "type": "html",
         "html": "slides/tell_claude.html",
         "narration": "Step one. Tell Claude what you want. A topic, a length, an audience.",
-        "speed": 1.15,
+        "speed": 1.0,
     },
     {
         "type": "html",
         "html": "slides/claude_writes.html",
         "narration": "Step two. Claude writes the slides and the narration, following the design rules in the skill.",
-        "speed": 1.15,
+        "speed": 1.0,
     },
     {
         "type": "html",
         "html": "slides/outro.html",
         "narration": "Step three. Run video-claw render. You get an MP4 in the out folder. That is the whole thing.",
-        "speed": 1.15,
+        "speed": 1.0,
     },
 ]
 '''

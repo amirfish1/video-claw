@@ -12,12 +12,13 @@ A slide dict carries:
   video:      path to an MP4 to embed (for type=video)
   narration:  text the TTS engine speaks
   title:      optional, drawn as a strip for image/video slides
-  lipsync:    optional bool. Requires FAL_API_KEY.
+  lipsync:    False | True | "fal" | "static"; overrides tts_cfg["lipsync"]
   speed:      optional float; overrides tts_cfg["speaking_rate"]
 
 The orchestrator caches every expensive step so re-runs are cheap.
 """
 from __future__ import annotations
+import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -231,6 +232,18 @@ def make_video(slides: List[Dict[str, Any]], *,
     lipsync_cfg = {**DEFAULT_LIPSYNC, **(lipsync_cfg or {})}
     avatar_cfg = avatar_cfg or {}
     captions_cfg = captions_cfg or {}
+    if free:
+        tts_cfg["provider"] = "macos"
+    narrations = [slide.get("narration") or "" for slide in slides]
+    if not narrations:
+        raise ValueError("No slides to render")
+    for idx, narration in enumerate(narrations):
+        if not isinstance(narration, str) or not narration.strip():
+            raise ValueError(f"slide {idx}: missing narration text")
+    rates = [float(s.get("speed", tts_cfg.get("speaking_rate", 1.0))) for s in slides]
+    if any(not math.isfinite(r) or r <= 0 for r in rates):
+        raise ValueError("Each slide needs a finite, positive speaking rate")
+    modes = ["off" if free else avatar_mod.resolve_lipsync_mode(s, tts_cfg) for s in slides]
     if out_path is None:
         out_path = workdir / "video.mp4"
     out_path = Path(out_path).resolve()
@@ -266,6 +279,12 @@ def make_video(slides: List[Dict[str, Any]], *,
     if free:
         print("[boot] $0 mode: local macOS TTS, no paid APIs")
 
+    master_audio = None
+    if resolved_provider == "elevenlabs":
+        print("[tts] one continuous ElevenLabs take; slicing by character alignment")
+        master_audio = tts_mod.make_audio_elevenlabs_master(
+            narrations, workdir=workdir, cache=cache, tts_cfg=tts_cfg, rates=rates)
+
     avatar_badge: Optional[Path] = None
     if avatar_cfg.get("static"):
         try:
@@ -279,15 +298,17 @@ def make_video(slides: List[Dict[str, Any]], *,
     parts: List[Path] = []
     all_captions: List[Tuple[float, float, str]] = []
     cumulative = 0.0
+    static_badges: Dict[Path, Path] = {}
     for idx, slide in enumerate(slides):
-        narration = slide.get("narration") or ""
-        if not narration.strip():
-            raise ValueError(f"slide {idx}: missing narration text")
-        rate = float(slide.get("speed") or tts_cfg.get("speaking_rate", 1.0))
+        narration = narrations[idx]
+        rate = rates[idx]
         slide_tts = {**tts_cfg, "provider": resolved_provider, "speaking_rate": rate}
         rate_tag = f" speed={rate}x" if abs(rate - 1.0) > 1e-3 else ""
         print(f"  slide {idx + 1}/{len(slides)}: TTS ({slide_tts['provider']}){rate_tag}")
-        m4a, dur = tts_mod.make_audio(narration, idx, workdir=workdir, cache=cache, tts_cfg=slide_tts)
+        if master_audio is not None:
+            m4a, dur = master_audio[idx]
+        else:
+            m4a, dur = tts_mod.make_audio(narration, idx, workdir=workdir, cache=cache, tts_cfg=slide_tts)
 
         # Always caption: word-aligned for ElevenLabs, estimated otherwise.
         all_captions.extend(_captions_for_slide(
@@ -295,16 +316,24 @@ def make_video(slides: List[Dict[str, Any]], *,
             offset_s=cumulative, dur=dur, rate=rate,
             estimate=captions_cfg.get("estimate", True)))
 
-        # Optional fal lipsync overlay.
+        # Static mode reuses the local PNG compositor; only "fal" may call FAL.
+        slide_avatar = _select_avatar_badge(
+            avatar_badge, avatar_cfg.get("scope", "all"), idx, slide)
         lipsync_circle = None
-        if slide.get("lipsync"):
+        if modes[idx] == "static":
+            avatar_rel = slide.get("lipsync_avatar") or lipsync_cfg["avatar"]
+            img = avatar_mod.resolve_avatar_image({"image": avatar_rel}, project_dir)
+            if img not in static_badges:
+                static_badges[img] = avatar_mod.crop_image_to_circle(img, cache=cache)
+            slide_avatar = static_badges[img]
+        elif modes[idx] == "fal":
             avatar_rel = slide.get("lipsync_avatar") or lipsync_cfg["avatar"]
             avatar = _resolve(avatar_rel, project_dir)
             if not avatar.exists():
                 print(f"  [lipsync] avatar not found at {avatar}; skipping")
             else:
                 try:
-                    # Generate an mp3 from the (silenceremoved + atempo'd) m4a for fal.
+                    # Generate an mp3 from the finished per-slide m4a for fal.
                     lip_mp3 = cache.path("m4a", [m4a, "lipsync-source"], "mp3")
                     if not lip_mp3.exists():
                         import subprocess
@@ -322,8 +351,6 @@ def make_video(slides: List[Dict[str, Any]], *,
                 except Exception as e:  # noqa: BLE001
                     print(f"  [lipsync] failed: {e}; continuing without overlay")
 
-        slide_avatar = _select_avatar_badge(
-            avatar_badge, avatar_cfg.get("scope", "all"), idx, slide)
         png = workdir / f"slide_{idx:02d}.png"
         mp4 = ff.make_slide_video(
             png, m4a, dur, idx,

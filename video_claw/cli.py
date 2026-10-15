@@ -281,7 +281,13 @@ def _ensure_keys_for(project: cfg_mod.Project) -> Optional[str]:
         return ("macOS local TTS selected but this is not macOS.\n"
                 "Use 'elevenlabs' or 'deepgram' on Linux.")
 
-    if any(s.get("lipsync") for s in project.slides) and not os.environ.get("FAL_API_KEY"):
+    from .avatar import resolve_lipsync_mode
+    try:
+        modes = [resolve_lipsync_mode(s, project.config.get("tts", {}))
+                 for s in project.slides]
+    except ValueError as e:
+        return str(e)
+    if "fal" in modes and not os.environ.get("FAL_API_KEY"):
         print("  [keys] FAL_API_KEY not set; lipsync slides will render without "
               "the avatar overlay.")
     return None
