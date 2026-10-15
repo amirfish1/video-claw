@@ -10,6 +10,7 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
+from .avatar import resolve_lipsync_mode
 from .tts import resolve_provider
 
 
@@ -44,13 +45,15 @@ def estimate_spend(slides: List[Dict[str, Any]], tts_cfg: Dict[str, Any]) -> Spe
         text = slide.get("narration") or ""
         if not text.strip():
             raise ValueError(f"slide {idx}: missing narration text")
-        rate = float(slide.get("speed") or tts_cfg.get("speaking_rate", 1.0))
+        rate = float(slide.get("speed", tts_cfg.get("speaking_rate", 1.0)))
         if not math.isfinite(rate) or rate <= 0:
             raise ValueError(f"slide {idx}: speaking rate must be positive and finite")
         chars += len(text)
-        if slide.get("lipsync"):
+        if resolve_lipsync_mode(slide, tts_cfg) == "fal":
             lipsync_slides += 1
             lipsync_seconds += len(text) / 5 / 150 * 60 / rate
+    if provider == "elevenlabs":
+        chars = len("\n\n".join(slide["narration"].strip() for slide in slides))
     return SpendEstimate(
         elevenlabs=chars / 5 / 150 * 0.30 if provider == "elevenlabs" else 0.0,
         deepgram=chars / 1000 * 0.015 if provider == "deepgram" else 0.0,

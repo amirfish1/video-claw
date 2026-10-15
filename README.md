@@ -238,7 +238,7 @@ CONFIG = {
         "provider": "elevenlabs",
         "voice_id": "cgSgspJ2msm6clMCkdW9",   # Jessica
         "model": "eleven_turbo_v2_5",
-        "speaking_rate": 1.2,
+        "speaking_rate": 1.0,
     },
 }
 
@@ -283,10 +283,31 @@ Slide types:
 
 Optional fields on any slide:
 
-- `lipsync: True`. Overlay a fal.ai OmniHuman circle on this slide (requires
-  `FAL_API_KEY` and `assets/avatar.png`).
+- `lipsync: True` or `"fal"`. Overlay a fal.ai OmniHuman circle on this slide
+  (requires `FAL_API_KEY` and `assets/avatar.png`).
+- `lipsync: "static"`. Overlay a still circular avatar locally, with no FAL
+  request or avatar charge. Uses the same `assets/avatar.png`, with the bundled
+  portrait as fallback. Works on HTML, image, and embedded video slides.
+- `lipsync: False`. Disable the lipsync presenter on this slide. A separately
+  enabled `avatar.static` badge remains independent of this setting.
 - `speed: 1.2`. Override `tts.speaking_rate` for this slide only.
 - `title: "..."`. Drawn as an amber-accented title strip for image/video slides.
+
+Set `CONFIG["tts"]["lipsync"] = "static"` for a project-wide static presenter;
+each slide can override it. Override the portrait with `lipsync_avatar` on a
+slide or `CONFIG["lipsync"]["avatar"]`. Static avatars work with any TTS provider;
+TTS itself may still have a cost. `mode: "free"` forces local macOS TTS and
+keeps the existing static-badge preset.
+
+ElevenLabs narrates the full script in one timestamped request, then slices
+per-slide audio using the original character alignment. This preserves the
+speaker's delivery across cuts. The master response is cached by full text,
+voice, and model; changing only a slide's speed reuses that response. Audio is
+cut before each slide's speed adjustment, and captions follow the same local
+timeline. The master and slices retain pauses (no silence removal). Missing or
+incompatible alignment stops the render rather than silently buying per-slide
+retries. Other TTS providers keep their existing per-slide flow. Scripts must
+fit the selected ElevenLabs model's single-request text limit.
 
 ## Commands
 

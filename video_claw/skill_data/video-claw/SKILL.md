@@ -55,7 +55,7 @@ The minimum is one TTS key. Lipsync is opt-in per slide.
 | Key | Required when | Where |
 | --- | --- | --- |
 | `ELEVENLABS_API_KEY` | Default TTS (also drives word-level captions) | https://elevenlabs.io/app/settings/api-keys |
-| `FAL_API_KEY` | Any slide has `lipsync: True` | https://fal.ai/dashboard/keys |
+| `FAL_API_KEY` | Effective `lipsync` mode is `True` or `"fal"` (not `"static"`) | https://fal.ai/dashboard/keys |
 | `DEEPGRAM_API_KEY` | Only if `tts.provider="deepgram"` (cheaper, no captions) | https://console.deepgram.com |
 
 Resolution order at runtime: env var, then `~/.config/video-claw/keys.env`
@@ -140,7 +140,12 @@ flags, speed overrides all live here. Slide schema:
  "narration": "...", "title": "..."}
 ```
 
-Optional per-slide fields: `lipsync: True`, `speed: 1.2`, `title: "..."`.
+Optional per-slide fields: `lipsync: True` / `"fal"` (paid animation),
+`lipsync: "static"` (local still portrait), `lipsync: False` (no presenter),
+`speed: 1.0`, `title: "..."`. `CONFIG["tts"]["lipsync"]` sets the default
+mode for all slides; explicit slide values override it. The default speaking
+rate is 1.0. ElevenLabs uses one continuous master take for the full script,
+then slices audio and captions per slide; other providers synthesize per slide.
 
 ### Step 4: Write slide HTMLs
 
@@ -152,7 +157,9 @@ The narration carries the meaning. The slide is for **anchoring**: one
 headline plus one supporting element (chart, stat row, quote, screenshot).
 Do not write paragraphs on the slide that the narration will also speak.
 
-See `references/style.md` for layout patterns and the design token palette.
+Before drafting narration, read the **Narration patterns** section of
+`references/style.md` for hook, perspective, pacing, evidence, and CTA rules.
+That reference also contains layout patterns and the design token palette.
 
 ### Step 5: Preview gate (mandatory before TTS spend)
 

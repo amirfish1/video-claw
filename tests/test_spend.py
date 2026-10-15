@@ -8,13 +8,13 @@ def test_estimate_elevenlabs_and_lipsync_speed():
     slides = [{"narration": "x" * 750, "lipsync": True, "speed": 2},
               {"narration": "y" * 750}]
     estimate = spend.estimate_spend(slides, {"provider": "el", "speaking_rate": 0.5})
-    assert estimate.elevenlabs == pytest.approx(0.60)
+    assert estimate.elevenlabs == pytest.approx(0.6008)
     assert estimate.deepgram == 0
-    assert estimate.char_count == 1500
+    assert estimate.char_count == 1502
     assert estimate.slide_count == 2
     assert estimate.lipsync_seconds == 30
     assert estimate.fal == pytest.approx(4.80)
-    assert estimate.total == pytest.approx(5.40)
+    assert estimate.total == pytest.approx(5.4008)
 
 
 @pytest.mark.parametrize("provider, el, dg", [
@@ -90,7 +90,7 @@ def test_estimate_precedes_gate_and_tts(tmp_path, monkeypatch, capsys, skip_prev
         raise RuntimeError("stop before synthesis")
 
     monkeypatch.setattr(core.preview_mod, "prompt_user", gate)
-    monkeypatch.setattr(tts, "make_audio", audio)
+    monkeypatch.setattr(tts, "make_audio_elevenlabs_master", audio)
     with pytest.raises(RuntimeError, match="stop before synthesis"):
         core.make_video([{"narration": "Hello", "lipsync": True}], workdir=tmp_path,
                         tts_cfg={"provider": "elevenlabs"}, skip_preview=skip_preview,
@@ -107,9 +107,30 @@ def test_estimate_precedes_gate_and_tts(tmp_path, monkeypatch, capsys, skip_prev
 def test_aborted_preview_never_calls_tts(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(core, "render_pngs", lambda *a, **kw: None)
     monkeypatch.setattr(core.preview_mod, "prompt_user", lambda *a, **kw: False)
-    monkeypatch.setattr(tts, "make_audio", lambda *a, **kw: pytest.fail("TTS on abort"))
+    monkeypatch.setattr(tts, "make_audio_elevenlabs_master", lambda *a, **kw: pytest.fail("TTS on abort"))
     with pytest.raises(SystemExit, match="aborted"):
         core.make_video([{"narration": "Hello"}], workdir=tmp_path,
                         tts_cfg={"provider": "elevenlabs"}, no_browser=True)
     assert "[spend]" in capsys.readouterr().out
     assert not (tmp_path / "cache/tts-last-render.json").exists()
+
+
+@pytest.mark.parametrize("default, slide, fal_slides", [
+    ("static", {}, 0),
+    (False, {"lipsync": "static"}, 0),
+    ("fal", {"lipsync": False}, 0),
+    ("fal", {}, 1),
+    ("static", {"lipsync": True}, 1),
+])
+def test_spend_uses_same_lipsync_mode_as_renderer(default, slide, fal_slides):
+    estimate = spend.estimate_spend(
+        [{"narration": "x" * 750, **slide}],
+        {"provider": "macos", "lipsync": default})
+    assert estimate.lipsync_slides == fal_slides
+    assert estimate.fal == pytest.approx(9.6 * fal_slides)
+
+
+def test_zero_slide_rate_is_not_replaced_by_global_default():
+    with pytest.raises(ValueError, match="speaking rate"):
+        spend.estimate_spend([{"narration": "hello", "speed": 0}],
+                             {"provider": "macos", "speaking_rate": 1})

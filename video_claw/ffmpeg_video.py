@@ -20,17 +20,28 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 def _video_slide_cmd(png: Path, clip: Path, m4a: Path, out: Path,
-                     vp: Tuple[int, int, int, int], pad_dur: float) -> List[str]:
+                     vp: Tuple[int, int, int, int], pad_dur: float, *,
+                     circle: Optional[Path] = None, static: bool = False,
+                     ox: int = 0, oy: int = 0) -> List[str]:
     vp_x, vp_y, vp_w, vp_h = vp
+    overlay_input = []
+    overlay_filter = ""
+    base_label = "v"
+    if circle is not None:
+        overlay_input = (["-loop", "1"] if static else ["-stream_loop", "-1"]) + ["-i", str(circle)]
+        base_label = "base"
+        overlay_filter = f"[base][3:v]overlay=x={ox}:y={oy}:shortest=0[v];"
     return [
         "ffmpeg", "-y",
         "-loop", "1", "-i", str(png),
         "-stream_loop", "-1", "-i", str(clip),
         "-i", str(m4a),
+        *overlay_input,
         "-filter_complex",
         f"[1:v]scale={vp_w}:{vp_h}:force_original_aspect_ratio=decrease,"
         f"pad={vp_w}:{vp_h}:(ow-iw)/2:(oh-ih)/2:color=0x000000[clip];"
-        f"[0:v][clip]overlay=x={vp_x}:y={vp_y}[v];"
+        f"[0:v][clip]overlay=x={vp_x}:y={vp_y}[{base_label}];"
+        f"{overlay_filter}"
         f"[2:a]apad=pad_dur=0.15[a]",
         "-map", "[v]", "-map", "[a]",
         "-c:v", "libx264", "-pix_fmt", "yuv420p",
@@ -113,6 +124,13 @@ def make_slide_video(png: Path, m4a: Path, duration: float, idx: int, *,
     width, height = dimensions
     out = workdir / f"slide_{idx:02d}.mp4"
     pad_dur = duration + 0.15
+    diameter = 280
+    if avatar_circle is not None and lipsync_circle is None:
+        from PIL import Image
+        with Image.open(avatar_circle) as badge:
+            diameter = badge.width
+    ox = width - diameter - 40
+    oy = height - diameter - 70
 
     # Variant 1: type=video. Overlay an embedded clip inside the slide PNG.
     if slide.get("type") == "video" and slide.get("video"):
@@ -128,16 +146,15 @@ def make_slide_video(png: Path, m4a: Path, duration: float, idx: int, *,
             margin = int(width * 0.08)
             top = int(height * 0.13)
             vp = (margin, top, width - 2 * margin, height - top - int(height * 0.06))
-        cmd = _video_slide_cmd(png, clip, m4a, out, vp, pad_dur)
+        cmd = _video_slide_cmd(
+            png, clip, m4a, out, vp, pad_dur,
+            circle=lipsync_circle or avatar_circle, static=lipsync_circle is None,
+            ox=ox, oy=oy)
         subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         return out
 
     # Variant 2: lipsync overlay in the bottom-right corner.
     if lipsync_circle is not None:
-        diameter = 280
-        margin = 40
-        ox = width - diameter - margin
-        oy = height - diameter - margin - 30
         cmd = _lipsync_overlay_cmd(png, lipsync_circle, m4a, out, ox, oy, pad_dur)
         subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         return out
@@ -145,10 +162,6 @@ def make_slide_video(png: Path, m4a: Path, duration: float, idx: int, *,
     # Variant 2b: static avatar badge (free mode). Same bottom-right slot as
     # lip-sync, but a still PNG. Lip-sync (above) takes precedence if both set.
     if avatar_circle is not None:
-        diameter = 280
-        margin = 40
-        ox = width - diameter - margin
-        oy = height - diameter - margin - 30
         cmd = _static_avatar_overlay_cmd(png, avatar_circle, m4a, out, ox, oy, pad_dur)
         subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         return out

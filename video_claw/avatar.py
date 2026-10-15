@@ -19,6 +19,18 @@ from typing import Any, Dict, Optional
 BUNDLED_AVATAR = Path(__file__).parent / "assets" / "avatar.png"
 
 
+def resolve_lipsync_mode(slide: Dict[str, Any], tts_cfg: Dict[str, Any]) -> str:
+    """Slide overrides the project default; never treat arbitrary strings as paid."""
+    value = slide.get("lipsync", tts_cfg.get("lipsync", False))
+    if value is True or value == "fal":
+        return "fal"
+    if value is False or value is None:
+        return "off"
+    if value == "static":
+        return "static"
+    raise ValueError('lipsync must be true, false, "fal", or "static"')
+
+
 def resolve_avatar_image(avatar_cfg: Dict[str, Any],
                          project_dir: Optional[Path]) -> Path:
     """Configured `image` if it exists (resolved relative to `project_dir`),

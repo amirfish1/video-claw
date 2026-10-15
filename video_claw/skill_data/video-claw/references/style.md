@@ -142,26 +142,17 @@ or pane-specific class) + a body with name, tag, and one-line description.
 
 ## Static presenter avatar (corner overlay)
 
-When you want Becky (or any avatar) visible on every slide WITHOUT the
-fal.ai lipsync charge ($0.16/sec), inject this rule into `_shared.css`:
+Set `CONFIG["tts"]["lipsync"] = "static"` to place a still circular presenter
+on every slide, or set `"lipsync": "static"` on selected slides. The renderer
+crops `assets/avatar.png` once and loops the transparent PNG locally. No FAL
+request or avatar charge. A slide's `"lipsync": False` overrides that default.
+`True` or `"fal"` explicitly requests the paid animated presenter.
 
-```css
-body.canvas::after {
-  content: "";
-  position: absolute;
-  right: 48px; bottom: 48px;
-  width: 132px; height: 132px;
-  border-radius: 50%;
-  background: #000 url('../assets/avatar.png') no-repeat center / cover;
-  border: 3px solid var(--accent);
-  box-shadow: 0 14px 32px rgba(0,0,0,0.55);
-  z-index: 9999;
-}
-body.canvas.v::after { width: 150px; height: 150px; right: 60px; bottom: 60px; }
-```
-
-Zero cost (pure CSS), no per-slide HTML changes. Differs from the
-fal.ai-driven lipsync avatar (which is animated but charged per second).
+Use `lipsync_avatar` on a slide or `CONFIG["lipsync"]["avatar"]` for a different
+portrait. Static mode falls back to the bundled portrait if the image is
+missing. The separate `avatar.static` option still supports scoped badges
+(`all`, `intro`, or `flagged`) and a custom diameter. Leave the bottom-right
+corner clear as described under Lipsync slide layout.
 
 ## Visual variance ratio
 
@@ -175,6 +166,44 @@ At least 1 image-bearing slide per 4 slides total. Counting:
 If the running ratio drops below 0.25, the next slide should be
 image-bearing. Sections feel "tired" when they run >4 text-only in a row.
 
+## Narration patterns
+
+Use these defaults for story-driven explainers; visual memes may use voice
+bookends with a silent middle.
+
+1. **Keep voiceover continuous.** Narrate the full story across slides.
+   ElevenLabs renders one master take and slices it using character alignment
+   so the speaker's delivery carries through cuts.
+2. **Assume no prior context.** Titles are visual shorthand. Narration explains
+   the meaning in plain English rather than reading each title verbatim.
+3. **Keep first person consistent.** When the speaker is the protagonist, use
+   first person in both narration and titles. Before rendering, run
+   `rg -ni '\b(he|his|him)\b' slides --glob '*.html'` and inspect any matches
+   for accidental shifts to third person; quotes and other people may be valid.
+4. **Give advice plus evidence.** Prefer "Do X. The research found N winners
+   doing X" to "Every winner does X." Use supported numbers and follow with
+   the practical takeaway.
+5. **Put the full hook on slide 0.** Its visual title states the complete
+   premise that creates the curiosity gap. Opening narration expresses that
+   same premise; later titles can be shorter.
+6. **Spend words where the insight is.** Setup slides such as "I posted on
+   Reddit" need one sentence. Insight slides get two or three: advice,
+   evidence, takeaway. Give them roughly twice the narration of setup slides.
+7. **Explain jargon inline.** Add a short visible pill on first use, such as
+   "HN (Hacker News, run by Y Combinator)." Explain domain terms for viewers
+   outside the niche without turning the slide into a paragraph.
+8. **Make the recap the CTA.** Recount the arc and connect it to a specific
+   next action. "Open source, link in description" alone is too detached
+   from what the viewer just learned.
+9. **Skip before/after recap slides.** A closing "before bad / after good"
+   comparison repeats the explainer and can feel patronizing. Trust viewers
+   to draw the contrast; use the outro for the recap and next action.
+10. **Budget words before writing.** At natural ElevenLabs Turbo v2.5 pacing
+    (~150 words/minute), target seconds × 2.5 words: 60s ≈ 150, 90s ≈ 225,
+    120s ≈ 300. Allocate per-slide counts, favoring insight slides, and leave
+    room for pauses. Start at `speaking_rate: 1.0` and `speed: 1.0`; when
+    delivery feels rushed, remove any speedup before cutting useful words.
+
 ## Hard rules
 
 - **No em-dashes.** Use comma, period, or colon.
@@ -186,13 +215,14 @@ image-bearing. Sections feel "tired" when they run >4 text-only in a row.
   `assets.md` for programmatic sources before asking the user.
 - **No curator's voice.** "Killer line", "single biggest thing", "your
   stack", "you already did" — these reveal human ranking. Default to
-  flat observational tone. Quotes from the source are the exception.
+  plain, evidence-backed advice without hype. Quotes from the source are
+  the exception.
 
 ## Lipsync slide layout
 
-When `lipsync: True` is set on a slide, the fal.ai presenter circle is
-overlaid in the bottom-right corner (~280px diameter, ~70px from the
-edges). Leave that area empty:
+When `lipsync: True`, `"fal"`, or `"static"` is set on a slide (or as the
+`tts.lipsync` default), the presenter circle is overlaid in the bottom-right
+corner (~280px diameter, ~70px from the edges). Leave that area empty:
 
 - `margin-right` at least 360px for headlines that extend across the canvas
 - avoid placing critical content in the bottom-right ~340px square

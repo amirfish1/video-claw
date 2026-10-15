@@ -58,3 +58,21 @@ def test_default_provider_and_captions(tmp_path):
     assert project.config["tts"]["provider"] == "auto"
     assert project.config["tts"]["macos_voice"] == "auto"
     assert project.config["captions"]["estimate"] is True
+
+
+def test_scaffold_uses_natural_speaking_rate():
+    from video_claw.config import SAMPLE_SLIDES_PY
+    namespace = {}
+    exec(SAMPLE_SLIDES_PY % {"title": "Test", "orientation": "horizontal", "slug": "test"}, namespace)
+    assert namespace["CONFIG"]["tts"]["speaking_rate"] == 1.0
+    assert len(namespace["SLIDES"]) == 4
+    assert all(slide["speed"] == 1.0 for slide in namespace["SLIDES"])
+
+
+def test_free_mode_clears_paid_global_lipsync_default(tmp_path):
+    from video_claw import config as cfg_mod
+    _write_project(tmp_path, '{"mode": "free", "tts": {"lipsync": "fal"}}',
+                   '[{"narration": "hi"}]')
+    project = cfg_mod.load(tmp_path)
+    assert project.config["tts"]["lipsync"] is False
+    assert project.config["avatar"]["static"] is True
