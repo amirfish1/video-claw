@@ -39,6 +39,30 @@ DEFAULT_TTS = {
 }
 
 
+def cache_settings(tts_cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Only settings that affect raw synthesis, with aliases/defaults resolved."""
+    cfg = {**DEFAULT_TTS, **tts_cfg}
+    provider = resolve_provider(cfg)
+    fields = {
+        "elevenlabs": ("voice_id", "model"),
+        "deepgram": ("deepgram_voice",),
+        "macos": ("macos_voice",),
+    }
+    if provider not in fields:
+        raise ValueError(f"Unknown TTS provider: {provider!r}")
+    return {"provider": provider, **{key: cfg[key] for key in fields[provider]}}
+
+
+def audio_cache_entry(text: str, tts_cfg: Dict[str, Any]) -> Tuple[list, str]:
+    """Shared by synthesis and diagnostics; preserve the existing cache keys."""
+    cfg = cache_settings(tts_cfg)
+    if cfg["provider"] == "elevenlabs":
+        return [text, "voice", cfg["voice_id"], "model", cfg["model"]], "mp3"
+    if cfg["provider"] == "deepgram":
+        return [text, "deepgram", "voice", cfg["deepgram_voice"]], "mp3"
+    return [text, "macos", "voice", cfg["macos_voice"]], "wav"
+
+
 def _ffprobe_duration(path: Path) -> float:
     res = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -110,7 +134,7 @@ def make_audio_elevenlabs(text: str, idx: int, *, workdir: Path,
         align_path = out_path.with_suffix(".alignment.json")
         align_path.write_text(json.dumps(res.get("alignment") or {}))
 
-    tts_key = [text, "voice", voice_id, "model", model]
+    tts_key, _ = audio_cache_entry(text, {**tts_cfg, "provider": "elevenlabs"})
     cached_mp3 = cache.run("tts", tts_key, "mp3", _generate)
 
     # Copy cached output to canonical per-slide paths used downstream.
@@ -164,7 +188,7 @@ def make_audio_deepgram(text: str, idx: int, *, workdir: Path,
             raise RuntimeError(f"Deepgram error {e.code}: {err}")
         out_path.write_bytes(audio)
 
-    tts_key = [text, "deepgram", "voice", voice]
+    tts_key, _ = audio_cache_entry(text, {**tts_cfg, "provider": "deepgram"})
     cached_mp3 = cache.run("tts", tts_key, "mp3", _generate)
     target_mp3 = workdir / f"narr_{idx:02d}.mp3"
     target_mp3.write_bytes(cached_mp3.read_bytes())
@@ -194,7 +218,7 @@ def make_audio_macos(text: str, idx: int, *, workdir: Path,
         # synthesize writes a wav directly to out_path.
         _macos.synthesize(text, out_path, voice=voice)
 
-    tts_key = [text, "macos", "voice", voice]
+    tts_key, _ = audio_cache_entry(text, {**tts_cfg, "provider": "macos"})
     cached_wav = cache.run("tts", tts_key, "wav", _generate)
     target_wav = workdir / f"narr_{idx:02d}.wav"
     target_wav.write_bytes(cached_wav.read_bytes())

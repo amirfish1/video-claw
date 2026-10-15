@@ -141,3 +141,47 @@ def test_install_skill_refuses_foreign_files_without_force(tmp_path):
         assert (target / "user-notes.md").is_file()
     finally:
         cli.SKILL_TARGET = orig_target
+
+
+@pytest.mark.parametrize("zipped", [False, True])
+def test_nested_skill_files_are_installed_and_owned(tmp_path, monkeypatch, zipped):
+    """Traverse filesystem and zip resources, then upgrade without false conflicts."""
+    import argparse
+    import zipfile
+    from video_claw import cli
+
+    files = {
+        "SKILL.md": "---\nname: nested-test\n---\n",
+        "references/snippets/deep/example.md": "nested recipe\n",
+        "examples/recipe/assets/example.txt": "nested asset\n",
+    }
+    package = tmp_path / "package"
+    for name, content in files.items():
+        source = package / "skill_data" / SKILL_NAME / name
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_text(content)
+    if zipped:
+        archive = tmp_path / "package.zip"
+        with zipfile.ZipFile(archive, "w") as writer:
+            for source in package.rglob("*"):
+                if source.is_file():
+                    writer.write(source, source.relative_to(package).as_posix())
+        resource = zipfile.Path(archive)
+    else:
+        resource = package
+    monkeypatch.setattr(cli.importlib.resources, "files", lambda name: resource)
+    try:
+        assert cli._iter_skill_files() == sorted(Path(name) for name in files)
+        target = tmp_path / "installed"
+        args = argparse.Namespace(target=str(target), force=False)
+        assert cli.cmd_install_skill(args) == 0
+        assert cli.cmd_install_skill(args) == 0
+        for name, content in files.items():
+            assert (target / name).read_text() == content
+        foreign = target / "examples/recipe/assets/user.txt"
+        foreign.write_text("keep me")
+        assert cli.cmd_install_skill(args) == 2
+        assert foreign.read_text() == "keep me"
+    finally:
+        if zipped:
+            resource.root.close()

@@ -179,6 +179,15 @@ video that's roughly $0.10. Captions need ElevenLabs.
 The content-hash cache means you only pay once per unique narration +
 voice + speed. Re-render to fix a CSS typo: free.
 
+Before the preview gate (including with `--yes` or `--no-preview`), `render`
+prints a rough spend estimate for ElevenLabs, Deepgram, and any flagged
+fal.ai lipsync slides. It uses the rates above, five characters per word,
+and 150 words/minute. Slide speed changes the estimated lipsync duration;
+TTS synthesis is priced before the local speed adjustment. The estimate
+assumes all audio and lipsync must be generated: cache hits, absent avatars,
+or skipped overlays can reduce spend. Actual charges vary by model, plan,
+and generated duration. Free local TTS without lipsync prints no paid estimate.
+
 ## Manual CLI (without Claude)
 
 You can drive video-claw directly from the shell if you want. This is the
@@ -295,6 +304,10 @@ video-claw keys path         # print the keys.env path
 
 - `--yes` / `-y`. Skip the interactive preview gate.
 - `--no-preview`. Render without even opening the preview server.
+- `--no-browser`. Keep the preview URL and confirmation gate without opening
+  a browser. Also available on `preview`; `VIDEO_CLAW_NO_BROWSER=1` (or
+  `true` / `yes`) has the same effect for both commands. Server TTL behavior
+  is unchanged. The default still opens a browser.
 - `--out path.mp4`. Override the output path.
 
 ## How it renders (one cycle)
@@ -332,7 +345,16 @@ background. OmniHuman preserves transparency; the circle crop then has
 artifacts. Fix: flatten the avatar onto solid black before saving it to
 `assets/avatar.png`. The bundled default avatar is already flat.
 
-**Stale cache**. Set `FORCE_REGEN=1` in the environment to bypass every
+**TTS cache misses**. Before synthesis, the render prints the number of cached
+narrations and misses. After a successful render, it remembers synthesis
+settings and narration hashes (not narration text) in the build cache, so the
+next run can explain changed voices/models/providers or changed narration.
+Voice names remain part of the synthesis key: selecting a different voice
+must generate different audio. Speed changes reuse raw TTS and re-encode locally.
+Older build caches without diagnostic metadata still work; unexplained missing
+audio is reported without guessing its cause.
+
+**Stale cache**. Set `MNV_FORCE_REGEN=1` in the environment to bypass every
 cache layer. Or `rm -rf video_build/`.
 
 ## Claude Code skill
