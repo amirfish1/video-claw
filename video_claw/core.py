@@ -28,7 +28,9 @@ from . import ffmpeg_video as ff
 from . import lipsync as lip_mod
 from . import preview as preview_mod
 from . import renderer_html
+from . import spend as spend_mod
 from . import tts as tts_mod
+from . import tts_cache
 
 
 DEFAULT_TTS = {
@@ -217,6 +219,7 @@ def make_video(slides: List[Dict[str, Any]], *,
                free: bool = False,
                auto_yes: bool = False,
                skip_preview: bool = False,
+               no_browser: bool = False,
                preview_ttl: Optional[int] = None) -> Path:
     """End-to-end: PNGs → preview gate → TTS → optional lipsync → slide MP4s →
     concat → caption burn. Returns the final MP4 path.
@@ -240,12 +243,20 @@ def make_video(slides: List[Dict[str, Any]], *,
     # Phase 1: render slide PNGs (cheap + no third-party cost).
     render_pngs(slides, workdir=workdir, project_dir=project_dir, dimensions=dimensions)
 
+    resolved_provider = tts_mod.resolve_provider(tts_cfg)
+    if (tts_cfg.get("provider") or "auto").lower() == "auto":
+        print(f"[tts] auto → {resolved_provider} (selected from available keys)")
+    tts_cfg = {**tts_cfg, "provider": resolved_provider}
+    spend_mod.print_estimate(spend_mod.estimate_spend(slides, tts_cfg))
+    tts_snapshot = tts_cache.report(slides, tts_cfg, cache)
+
     # Phase 2: preview gate. Give the user a chance to abort before TTS spend.
     if not skip_preview:
         ok = preview_mod.prompt_user(
             workdir, slides, orientation,
             auto_yes=auto_yes,
             preview_ttl=preview_ttl,
+            no_browser=no_browser,
             cost_note="$0 — local TTS, no paid APIs" if free else None,
         )
         if not ok:
@@ -254,10 +265,6 @@ def make_video(slides: List[Dict[str, Any]], *,
     # Phase 3: TTS (cached), optional lipsync/avatar (cached), per-slide MP4 stitching.
     if free:
         print("[boot] $0 mode: local macOS TTS, no paid APIs")
-
-    resolved_provider = tts_mod.resolve_provider(tts_cfg)
-    if (tts_cfg.get("provider") or "auto").lower() == "auto":
-        print(f"[tts] auto → {resolved_provider} (selected from available keys)")
 
     avatar_badge: Optional[Path] = None
     if avatar_cfg.get("static"):
@@ -327,6 +334,8 @@ def make_video(slides: List[Dict[str, Any]], *,
         parts.append(mp4)
         cumulative += dur + 0.15
         print(f"    -> {dur:.1f}s audio")
+
+    tts_cache.remember(cache, tts_snapshot)
 
     # Phase 4: concat + burn captions.
     raw = ff.concat_slides(parts, workdir=workdir)

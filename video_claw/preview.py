@@ -238,6 +238,7 @@ def prompt_user(
     auto_yes: bool = False,
     cost_note: Optional[str] = None,
     preview_ttl: Optional[int] = None,
+    no_browser: bool = False,
 ) -> bool:
     """Open the preview, wait on stdin, return True if the user typed 'y' or 'yes'.
 
@@ -245,8 +246,14 @@ def prompt_user(
     for `preview_ttl` seconds after the user confirms (default 1h interactive,
     60s headless). Pass `preview_ttl=0` to restore the legacy "die on confirm"
     behavior.
+
+    `no_browser=True` or VIDEO_CLAW_NO_BROWSER=1 suppresses browser launch
+    while preserving the URL banner, input gate, and server lifetime.
     """
     slides = list(slides)
+    no_browser = no_browser or os.environ.get("VIDEO_CLAW_NO_BROWSER", "").strip().lower() in (
+        "1", "true", "yes",
+    )
     idx_path = _build_index(out_dir, slides, orientation)
     ttl = resolve_ttl(preview_ttl)
     if cost_note:
@@ -272,7 +279,7 @@ def prompt_user(
         proc = _spawn_detached_server(out_dir, port, ttl)
         if proc is None:
             # Fall back to legacy in-process flow.
-            return _prompt_user_legacy(out_dir, idx_path, slides=slides)
+            return _prompt_user_legacy(out_dir, idx_path, slides=slides, no_browser=no_browser)
         url = f"http://127.0.0.1:{port}/{idx_path.name}"
         file_url = f"file://{idx_path.resolve()}"
         # Copy-paste banner first so the URL is always visible. Show the
@@ -284,7 +291,8 @@ def prompt_user(
         print(f"  preview at:  {url}")
         print(f"  stable URL:  {file_url}")
         print(bar)
-        _open_browser(url)
+        if not no_browser:
+            _open_browser(url)
         # Label the gate based on what will actually run. Lipsync is per-slide
         # opt-in; if no slide sets `lipsync: True`, only ElevenLabs/Deepgram
         # TTS will charge — fal.ai is not called. Naming the actual cost
@@ -311,11 +319,12 @@ def prompt_user(
         return False
 
     # ttl == 0 → legacy behavior: in-process server, killed on input return.
-    return _prompt_user_legacy(out_dir, idx_path, slides=slides)
+    return _prompt_user_legacy(out_dir, idx_path, slides=slides, no_browser=no_browser)
 
 
 def _prompt_user_legacy(
-    out_dir: Path, idx_path: Path, *, slides: Optional[List[dict]] = None
+    out_dir: Path, idx_path: Path, *, slides: Optional[List[dict]] = None,
+    no_browser: bool = False,
 ) -> bool:
     """Original behavior: in-process server, torn down the instant input returns.
 
@@ -337,8 +346,9 @@ def _prompt_user_legacy(
         print(f"  preview at:  {url}")
         print(bar)
         # Give the server a tick to spin up before opening the browser.
-        time.sleep(0.2)
-        _open_browser(url)
+        if not no_browser:
+            time.sleep(0.2)
+            _open_browser(url)
         # Accurate label: lipsync only charges when at least one slide opts in.
         has_lipsync = any(s.get("lipsync") for s in (slides or []))
         gate_label = "TTS + lipsync" if has_lipsync else "TTS"

@@ -116,13 +116,16 @@ def _iter_skill_files() -> List[Path]:
     """List every file the bundled skill ships with, as relative paths."""
     root = importlib.resources.files("video_claw") / "skill_data" / SKILL_NAME
     out: List[Path] = []
-    for entry in root.iterdir():
-        if entry.is_file():
-            out.append(Path(entry.name))
-        elif entry.is_dir():
-            for sub in entry.iterdir():
-                if sub.is_file():
-                    out.append(Path(entry.name) / sub.name)
+
+    def walk(node, prefix: Path) -> None:
+        for entry in sorted(node.iterdir(), key=lambda item: item.name):
+            rel = prefix / entry.name
+            if entry.is_file():
+                out.append(rel)
+            elif entry.is_dir():
+                walk(entry, rel)
+
+    walk(root, Path())
     return out
 
 
@@ -328,6 +331,7 @@ def cmd_render(args: argparse.Namespace) -> int:
             free=(project.config.get("mode") == "free"),
             auto_yes=args.yes,
             skip_preview=args.no_preview,
+            no_browser=args.no_browser,
             preview_ttl=_validate_preview_ttl(args.preview_ttl),
         )
     except SystemExit as e:
@@ -352,6 +356,7 @@ def cmd_preview(args: argparse.Namespace) -> int:
     preview_mod.prompt_user(
         workdir, project.slides, project.orientation,
         auto_yes=False,
+        no_browser=args.no_browser,
         preview_ttl=_validate_preview_ttl(args.preview_ttl),
     )
     return 0
@@ -466,6 +471,10 @@ def build_parser() -> argparse.ArgumentParser:
             "Env: VIDEO_CLAW_PREVIEW_TTL."
         ),
     )
+    pr.add_argument(
+        "--no-browser", action="store_true",
+        help="Print the preview URL without opening a browser (also VIDEO_CLAW_NO_BROWSER=1).",
+    )
     pr.set_defaults(func=cmd_render)
 
     pfa = sub.add_parser(
@@ -495,6 +504,10 @@ def build_parser() -> argparse.ArgumentParser:
             "confirms (default: 3600 interactive / 60 headless). "
             "0 disables. Env: VIDEO_CLAW_PREVIEW_TTL."
         ),
+    )
+    pp.add_argument(
+        "--no-browser", action="store_true",
+        help="Print the preview URL without opening a browser (also VIDEO_CLAW_NO_BROWSER=1).",
     )
     pp.set_defaults(func=cmd_preview)
 
