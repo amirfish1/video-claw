@@ -36,7 +36,7 @@ def estimate_spend(slides: List[Dict[str, Any]], tts_cfg: Dict[str, Any]) -> Spe
     sent to fal.ai, since atempo runs locally after synthesis.
     """
     provider = resolve_provider(tts_cfg)
-    if provider not in ("elevenlabs", "deepgram", "macos"):
+    if provider not in ("elevenlabs", "deepgram", "macos", "kokoro"):
         raise ValueError(f"Unknown TTS provider: {provider!r}")
     chars = 0
     lipsync_seconds = 0.0

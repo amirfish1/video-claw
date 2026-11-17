@@ -37,6 +37,8 @@ DEFAULT_TTS = {
     "speaking_rate": 1.0,
     "deepgram_voice": "aura-2-thalia-en",
     "macos_voice": "auto",
+    "kokoro_voice": "af_heart",
+    "kokoro_url": "http://127.0.0.1:3019/speak",
 }
 
 
@@ -48,6 +50,7 @@ def cache_settings(tts_cfg: Dict[str, Any]) -> Dict[str, Any]:
         "elevenlabs": ("voice_id", "model"),
         "deepgram": ("deepgram_voice",),
         "macos": ("macos_voice",),
+        "kokoro": ("kokoro_voice", "kokoro_url"),
     }
     if provider not in fields:
         raise ValueError(f"Unknown TTS provider: {provider!r}")
@@ -61,6 +64,8 @@ def audio_cache_entry(text: str, tts_cfg: Dict[str, Any]) -> Tuple[list, str]:
         return ["elevenlabs-master-v1", text.strip(), cfg["voice_id"], cfg["model"]], "json"
     if cfg["provider"] == "deepgram":
         return [text, "deepgram", "voice", cfg["deepgram_voice"]], "mp3"
+    if cfg["provider"] == "kokoro":
+        return [text, "kokoro", "voice", cfg["kokoro_voice"]], "wav"
     return [text, "macos", "voice", cfg["macos_voice"]], "wav"
 
 
@@ -304,6 +309,42 @@ def make_audio_deepgram(text: str, idx: int, *, workdir: Path,
     return target_m4a, _ffprobe_duration(target_m4a)
 
 
+def make_audio_kokoro(text: str, idx: int, *, workdir: Path,
+                      cache, tts_cfg: Dict[str, Any]) -> Tuple[Path, float]:
+    """Local Kokoro HTTP server (POST /speak -> wav). Free, offline.
+    No word-level alignment; captions use estimated timing."""
+    voice = tts_cfg.get("kokoro_voice", DEFAULT_TTS["kokoro_voice"])
+    url = tts_cfg.get("kokoro_url", DEFAULT_TTS["kokoro_url"])
+    rate = float(tts_cfg.get("speaking_rate", DEFAULT_TTS["speaking_rate"]))
+
+    def _generate(out_path: Path) -> None:
+        req = urllib.request.Request(
+            url,
+            data=json.dumps({"text": text, "voice": voice}).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=300) as r:
+            audio = r.read()
+        if not audio.startswith(b"RIFF"):
+            raise RuntimeError(f"Kokoro server returned non-wav response: {audio[:200]!r}")
+        out_path.write_bytes(audio)
+
+    tts_key, _ = audio_cache_entry(text, {**tts_cfg, "provider": "kokoro"})
+    cached_wav = cache.run("tts", tts_key, "wav", _generate)
+    target_wav = workdir / f"narr_{idx:02d}.wav"
+    target_wav.write_bytes(cached_wav.read_bytes())
+
+    m4a_key = [cached_wav, "rate", round(rate, 4), "silenceremove", "0.25", "0.0", "kokoro"]
+
+    def _m4a_gen(out_path: Path) -> None:
+        _encode_to_m4a(target_wav, out_path, rate=rate)
+
+    cached_m4a = cache.run("m4a", m4a_key, "m4a", _m4a_gen)
+    target_m4a = workdir / f"narr_{idx:02d}.m4a"
+    target_m4a.write_bytes(cached_m4a.read_bytes())
+    return target_m4a, _ffprobe_duration(target_m4a)
+
+
 def make_audio_macos(text: str, idx: int, *, workdir: Path,
                      cache, tts_cfg: Dict[str, Any]) -> Tuple[Path, float]:
     """macOS `say` -> wav -> m4a. Free, offline, macOS-only. No alignment.
@@ -351,6 +392,8 @@ def resolve_provider(tts_cfg: Dict[str, Any]) -> str:
         return "deepgram"
     if provider in ("macos", "say", "macos-say"):
         return "macos"
+    if provider in ("kokoro", "local-tts", "local_tts"):
+        return "kokoro"
     if provider != "auto":
         return provider  # unknown explicit value; dispatch will raise a clear error
 
@@ -376,6 +419,8 @@ def make_audio(text: str, idx: int, *, workdir: Path, cache,
         return make_audio_deepgram(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
     if provider == "macos":
         return make_audio_macos(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
+    if provider == "kokoro":
+        return make_audio_kokoro(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
     if provider == "elevenlabs":
         return make_audio_elevenlabs(text, idx, workdir=workdir, cache=cache, tts_cfg=tts_cfg)
     raise ValueError(
